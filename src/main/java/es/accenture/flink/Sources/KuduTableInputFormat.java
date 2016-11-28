@@ -1,8 +1,7 @@
-package org.kududb.examples.sample;
+package es.accenture.flink.Sources;
 
 /**
- *
- * Created by luis on 23/11/16.
+ * Created by lballestin & danielcoto on 23/11/16.
  */
 
 
@@ -30,9 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link InputFormat} subclass that wraps the access for HTables.
+ * {@link InputFormat} subclass that wraps the access for KuduTable.
  */
-public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFormat<T, InputSplit> {
+public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFormat<T, KuduInputSplit> {
 
     private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     private static final String TABLE_NAME = System.getProperty("tableName", "sample");
@@ -48,22 +47,22 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
     private static final Logger LOG = LoggerFactory.getLogger(KuduTableInputFormat.class);
 
     /**
-     * Returns an instance of Scan that retrieves the required subset of records from the HBase table.
+     * Returns an instance of Scan that retrieves the required subset of records from the Kudu table.
      * @return The appropriate instance of Scan for this usecase.
      */
     protected abstract KuduScanner getScanner();
 
     /**
      * What table is to be read.
-     * Per instance of a TableInputFormat derivative only a single tablename is possible.
+     * Per instance of a TableInputFormat derivative only a single tableName is possible.
      * @return The name of the table
      */
     protected abstract String getTableName();
 
     /**
-     * The output from HBase is always an instance of {@link Result}.
+     * The output from Kudu is always an instance of {@link Result}.
      * This method is to copy the data in the Result instance into the required {@link Tuple}
-     * @param r The Result instance from HBase that needs to be converted
+     * @param r The Result instance from Kudu that needs to be converted
      * @return The approriate instance of {@link Tuple} that contains the needed information.
      */
     protected abstract T mapResultToTuple(Result r);
@@ -112,7 +111,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
 //    }
 
     @Override
-    public void open(InputSplit split) throws IOException {
+    public void open(KuduInputSplit split) throws IOException {
         try {
             table = client.openTable(TABLE_NAME);
             KuduSession session = client.newSession();
@@ -180,7 +179,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
     }
 
     @Override
-    public InputSplit[] createInputSplits(final int minNumSplits) throws IOException {
+    public KuduInputSplit[] createInputSplits(final int minNumSplits) throws IOException {
 
         try {
             if (table == null) {
@@ -194,7 +193,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
 
             List<KuduScanToken> tokens = tokenBuilder.build();
 
-            List<InputSplit> splits = new ArrayList<InputSplit>(tokens.size());
+            List<KuduInputSplit> splits = new ArrayList<>(tokens.size());
             for (KuduScanToken token : tokens) {
                 List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
                 for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
@@ -202,7 +201,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
                 }
                 splits.add(new TableSplit(token, locations.toArray(new String[locations.size()])));
             }
-            return splits.toArray(new InputSplit[0]);
+            return splits.toArray(new KuduInputSplit[0]);
         } finally {
             try {
                 client.close();
@@ -212,7 +211,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
         }
     }
 
-    private void logSplitInfo(String action, LocatableInputSplit split) {
+    private void logSplitInfo(String action, KuduInputSplit split) {
         int splitId = split.getSplitNumber();
         String splitStart = Bytes.toString(split.getStartRow());
         String splitEnd = Bytes.toString(split.getEndRow());
@@ -222,29 +221,13 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
         LOG.info("{} split (this={})[{}|{}|{}|{}]", action, this, splitId, hostnames, splitStartKey, splitStopKey);
     }
 
-    /**
-     * Test if the given region is to be included in the InputSplit while splitting the regions of a table.
-     * <p>
-     * This optimization is effective when there is a specific reasoning to exclude an entire region from the M-R job,
-     * (and hence, not contributing to the InputSplit), given the start and end keys of the same. <br>
-     * Useful when we need to remember the last-processed top record and revisit the [last, current) interval for M-R
-     * processing, continuously. In addition to reducing InputSplits, reduces the load on the region server as well, due
-     * to the ordering of the keys. <br>
-     * <br>
-     * Note: It is possible that <code>endKey.length() == 0 </code> , for the last (recent) region. <br>
-     * Override this method, if you want to bulk exclude regions altogether from M-R. By default, no region is excluded(
-     * i.e. all regions are included).
-     *
-     * @param startKey Start key of the region
-     * @param endKey   End key of the region
-     * @return true, if this region needs to be included as part of the input (default).
-     */
+
     protected boolean includeRegionInSplit(final byte[] startKey, final byte[] endKey) {
         return true;
     }
 
     @Override
-    public InputSplitAssigner getInputSplitAssigner(TableInputSplit[] inputSplits) {
+    public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
         return new LocatableInputSplitAssigner(inputSplits);
     }
 
