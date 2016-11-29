@@ -3,11 +3,7 @@ package es.accenture.flink.Sources;
 import org.apache.flink.core.io.LocatableInputSplit;
 
 /**
-<<<<<<< HEAD
  * Created by lballestin on 28/11/16.
-=======
- * Created by luis on 28/11/16.
->>>>>>> ruben/master
  */
 public class KuduInputSplit extends LocatableInputSplit {
 
@@ -37,11 +33,7 @@ public class KuduInputSplit extends LocatableInputSplit {
      *        the end row of the split
      */
     KuduInputSplit(final int splitNumber, final String[] hostnames, final byte[] tableName, final byte[] startRow,
-<<<<<<< HEAD
-                    final byte[] endRow) {
-=======
                    final byte[] endRow) {
->>>>>>> ruben/master
         super(splitNumber, hostnames);
 
         this.tableName = tableName;
