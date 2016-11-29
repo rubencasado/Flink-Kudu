@@ -3,7 +3,7 @@ package es.accenture.flink.Sources;
 import org.apache.flink.core.io.LocatableInputSplit;
 
 /**
- * Created by luis on 28/11/16.
+ * Created by lballestin on 28/11/16.
  */
 public class KuduInputSplit extends LocatableInputSplit {
 

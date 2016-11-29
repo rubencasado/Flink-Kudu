@@ -1,7 +1,7 @@
 package es.accenture.flink.Sources;
 
 /**
- * Created by lballestin & danielcoto on 23/11/16.
+ * Created by lballestin, danielcoto & alvarovadillo on 23/11/16.
  */
 
 
@@ -68,7 +68,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
     protected abstract T mapResultToTuple(Result r);
 
     /**
-     * Creates a {@link KuduScan} object and opens the {@link KuduTable} connection.
+     * Creates a {@link KuduScanner} object and opens the {@link KuduTable} connection.
      * These are opened here because they are needed in the createInputSplits
      * which is called before the openInputFormat method.
      * So the connection is opened in {@link #configure(Configuration)} and closed in {@link #closeInputFormat()}.
@@ -211,20 +211,15 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
         }
     }
 
-    private void logSplitInfo(String action, KuduInputSplit split) {
-        int splitId = split.getSplitNumber();
-        String splitStart = Bytes.toString(split.getStartRow());
-        String splitEnd = Bytes.toString(split.getEndRow());
-        String splitStartKey = splitStart.isEmpty() ? "-" : splitStart;
-        String splitStopKey = splitEnd.isEmpty() ? "-" : splitEnd;
-        String[] hostnames = split.getHostnames();
-        LOG.info("{} split (this={})[{}|{}|{}|{}]", action, this, splitId, hostnames, splitStartKey, splitStopKey);
-    }
-
-
-    protected boolean includeRegionInSplit(final byte[] startKey, final byte[] endKey) {
-        return true;
-    }
+//    private void logSplitInfo(String action, KuduInputSplit split) {
+//        int splitId = split.getSplitNumber();
+//        String splitStart = Bytes.toString(split.getStartRow());
+//        String splitEnd = Bytes.toString(split.getEndRow());
+//        String splitStartKey = splitStart.isEmpty() ? "-" : splitStart;
+//        String splitStopKey = splitEnd.isEmpty() ? "-" : splitEnd;
+//        String[] hostnames = split.getHostnames();
+//        LOG.info("{} split (this={})[{}|{}|{}|{}]", action, this, splitId, hostnames, splitStartKey, splitStopKey);
+//    }
 
     @Override
     public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
