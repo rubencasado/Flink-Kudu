@@ -1,11 +1,11 @@
-package org.kududb.examples.sample;
+
 
 /**
  *
  * Created by luis on 23/11/16.
  */
 
-
+package es.accenture.flink.Sources;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * {@link InputFormat} subclass that wraps the access for HTables.
  */
-public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFormat<T, InputSplit> {
+public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSplit> {
 
     private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     private static final String TABLE_NAME = System.getProperty("tableName", "sample");
@@ -51,14 +51,18 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
      * Returns an instance of Scan that retrieves the required subset of records from the HBase table.
      * @return The appropriate instance of Scan for this usecase.
      */
-    protected abstract KuduScanner getScanner();
+    public KuduScanner getScanner(){
+        return this.scanner;
+    }
 
     /**
      * What table is to be read.
      * Per instance of a TableInputFormat derivative only a single tablename is possible.
      * @return The name of the table
      */
-    protected abstract String getTableName();
+     public String getTableName(){
+         return TABLE_NAME;
+     }
 
     /**
      * The output from HBase is always an instance of {@link Result}.
@@ -66,24 +70,63 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
      * @param r The Result instance from HBase that needs to be converted
      * @return The approriate instance of {@link Tuple} that contains the needed information.
      */
-    protected abstract T mapResultToTuple(Result r);
+    public void mapResultToTuple(Result r){
+
+        System.out.println("Function call: mapResultToTuple");
+
+    }
+
+
+    public void createTableTest() throws KuduException {
+
+        System.out.println("Creando tabla de prueba para testear");
+
+        List<ColumnSchema> columns = new ArrayList(2);
+        columns.add(new ColumnSchema.ColumnSchemaBuilder("key", Type.INT32)
+                .key(true)
+                .build());
+        columns.add(new ColumnSchema.ColumnSchemaBuilder("value", Type.STRING)
+                .build());
+        List<String> rangeKeys = new ArrayList<>();
+        rangeKeys.add("key");
+
+        Schema schema = new Schema(columns);
+        client.createTable(this.getTableName(), schema,
+                new CreateTableOptions().setRangePartitionColumns(rangeKeys));
+
+        KuduTable table = client.openTable(this.getTableName());
+        KuduSession session = client.newSession();
+        for (int i = 0; i < 3; i++) {
+            Insert insert = table.newInsert();
+            PartialRow row = insert.getRow();
+            row.addInt(0, i);
+            row.addString(1, "value " + i);
+            session.apply(insert);
+        }
+    System.out.println("Tabla " + this.getTableName()+ " creada");
+
+    }
+
+
 
     /**
-     * Creates a {@link KuduScan} object and opens the {@link KuduTable} connection.
+     * Creates a object and opens the {@link KuduTable} connection.
      * These are opened here because they are needed in the createInputSplits
      * which is called before the openInputFormat method.
-     * So the connection is opened in {@link #configure(Configuration)} and closed in {@link #closeInputFormat()}.
+     * So the connection is opened in {@link #configure(Configuration)}.
      *
      * @param parameters The configuration that is to be used
      * @see Configuration
      */
+
     @Override
     public void configure(Configuration parameters) {
         LOG.info("Initializing KUDUConfiguration");
-        KuduClient client = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
         try {
             if (client.tableExists(TABLE_NAME)) {
                 table = client.openTable(TABLE_NAME);
+            } else {
+                this.createTableTest();
             }
         }catch (Exception e){
             throw new RuntimeException("Could not obtain table");
@@ -112,10 +155,18 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
 //    }
 
     @Override
-    public void open(InputSplit split) throws IOException {
+    public void open(KuduInputSplit split) throws IOException {
+        System.out.println("Open");
         try {
             table = client.openTable(TABLE_NAME);
             KuduSession session = client.newSession();
+            System.out.println("Sesion creada");
+
+            System.out.println("Llamando a createInputSplits");
+            //TODO Quitar si se ejecuta desde el JOB
+            KuduInputSplit[] splits = createInputSplits(3);
+            System.out.println("Salido de createInputSplits");
+            System.out.println("Se han generado " + splits.length+ " splits");
 
         } catch (IOException e) {
             LOG.error("Could not open Kudu Table named: " + TABLE_NAME, e);
@@ -135,15 +186,18 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
     }
 
     @Override
-    public T nextRecord(T reuse) throws IOException {
+    public RowResult nextRecord(RowResult reuse) throws IOException {
         if (scanner == null) {
             throw new IOException("No table scanner provided!");
         }
         try {
             RowResult res = results.next();
+
             if (res != null) {
                 scannedRows++;
-                return mapResultToTuple((Result) res); // GUARDAR LA FILA EN ALGUN LADO O DEVOLVERLA
+                System.out.println("Reading row: " + scannedRows);
+                mapResultToTuple((Result) res); // GUARDAR LA FILA EN ALGUN LADO O DEVOLVERLA
+                return null;
             }
         } catch (Exception e) {
             endReached = true;
@@ -167,21 +221,50 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
     }
 
     @Override
-    public void closeInputFormat() {
+    public KuduInputSplit[] createInputSplits(final int minNumSplits) throws IOException {
+
+        int cont = 0;
+
+
         try {
-            if (table != null) {
-                client.close();
+
+            KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table);
+            List<KuduScanToken> tokens = builder.build();
+            KuduInputSplit[] inputs = new KuduInputSplit[tokens.size()];
+
+
+
+            String[] strArray = new String[] {KUDU_MASTER};
+
+            for (KuduScanToken token : tokens){
+
+
+                byte[] serializadedToken = token.serialize();
+                KuduScanner scanner = KuduScanToken.deserializeIntoScanner(serializadedToken, this.client);
+
+
+                //++++++++++++++++++++++++++++++++++++++++++++++++++++
+                byte[] start = token.getTablet().getPartition().getPartitionKeyStart();
+                byte[] end = token.getTablet().getPartition().getPartitionKeyEnd();
+
+
+                KuduInputSplit inputSplit = new KuduInputSplit(cont,strArray,this.table.getName().getBytes()
+                        ,start, end);
+
+                //++++++++++++++++++++++++++++++++++++++++++++++++++++
+                inputs[cont] = inputSplit;
+                cont++;
+                System.out.println("CONTADOR:" + cont);
             }
-        } catch (IOException e){
-            e.printStackTrace();
-        } finally {
-            table = null;
+
+        return inputs;
+
+        } catch (Exception e) {
+            System.out.println("Fallo");
+            //e.printStackTrace();
         }
-    }
 
-    @Override
-    public InputSplit[] createInputSplits(final int minNumSplits) throws IOException {
-
+/*
         try {
             if (table == null) {
                 throw new IOException("Table was not provided/opened");
@@ -210,9 +293,13 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
                 throw new IOException(g);
             }
         }
+        */
+
+return null;
     }
 
     private void logSplitInfo(String action, LocatableInputSplit split) {
+    /*
         int splitId = split.getSplitNumber();
         String splitStart = Bytes.toString(split.getStartRow());
         String splitEnd = Bytes.toString(split.getEndRow());
@@ -220,6 +307,7 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
         String splitStopKey = splitEnd.isEmpty() ? "-" : splitEnd;
         String[] hostnames = split.getHostnames();
         LOG.info("{} split (this={})[{}|{}|{}|{}]", action, this, splitId, hostnames, splitStartKey, splitStopKey);
+    */
     }
 
     /**
@@ -243,10 +331,17 @@ public abstract class KuduTableInputFormat<T extends Tuple> extends RichInputFor
         return true;
     }
 
+
+
+
+
+
+
     @Override
-    public InputSplitAssigner getInputSplitAssigner(TableInputSplit[] inputSplits) {
+    public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
         return new LocatableInputSplitAssigner(inputSplits);
     }
+
 
     @Override
     public BaseStatistics getStatistics(BaseStatistics cachedStatistics) {
