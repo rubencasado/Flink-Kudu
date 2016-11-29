@@ -1,8 +1,6 @@
-
-
 /**
  *
- * Created by luis on 23/11/16.
+ * Created by lballestin, danicoto & AlvaroVadillo on 23/11/16.
  */
 
 package es.accenture.flink.Sources;
@@ -60,9 +58,9 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
      * Per instance of a TableInputFormat derivative only a single tablename is possible.
      * @return The name of the table
      */
-     public String getTableName(){
-         return TABLE_NAME;
-     }
+    public String getTableName(){
+        return TABLE_NAME;
+    }
 
     /**
      * The output from HBase is always an instance of {@link Result}.
@@ -81,29 +79,32 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
 
         System.out.println("Creando tabla de prueba para testear");
 
-        List<ColumnSchema> columns = new ArrayList(2);
+        List<ColumnSchema> columns = new ArrayList(3);
         columns.add(new ColumnSchema.ColumnSchemaBuilder("key", Type.INT32)
                 .key(true)
+                .build());
+        columns.add(new ColumnSchema.ColumnSchemaBuilder("time", Type.BOOL)
                 .build());
         columns.add(new ColumnSchema.ColumnSchemaBuilder("value", Type.STRING)
                 .build());
         List<String> rangeKeys = new ArrayList<>();
         rangeKeys.add("key");
+        rangeKeys.add(1,"time");
 
         Schema schema = new Schema(columns);
-        client.createTable(this.getTableName(), schema,
+        client.createTable("sample", schema,
                 new CreateTableOptions().setRangePartitionColumns(rangeKeys));
-
         KuduTable table = client.openTable(this.getTableName());
         KuduSession session = client.newSession();
         for (int i = 0; i < 3; i++) {
             Insert insert = table.newInsert();
             PartialRow row = insert.getRow();
             row.addInt(0, i);
+            row.addBoolean(i, true);
             row.addString(1, "value " + i);
             session.apply(insert);
         }
-    System.out.println("Tabla " + this.getTableName()+ " creada");
+        System.out.println("Tabla " + this.getTableName()+ " creada");
 
     }
 
@@ -234,21 +235,27 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
 
 
 
-            String[] strArray = new String[] {KUDU_MASTER};
+            String[] hostName = new String[] {KUDU_MASTER};
 
             for (KuduScanToken token : tokens){
 
+                /**
+                 * Para serializedToken
+                 * byte[] serializadedToken = token.serialize();
+                 * KuduScanner scanner = KuduScanToken.deserializeIntoScanner(serializadedToken, this.client);
+                 **/
 
-                byte[] serializadedToken = token.serialize();
-                KuduScanner scanner = KuduScanToken.deserializeIntoScanner(serializadedToken, this.client);
-
-
+                KuduScanner scanner = token.intoScanner(this.client);
                 //++++++++++++++++++++++++++++++++++++++++++++++++++++
+                //FALLA END-START, NO DEBERÍAN SER IGUALES
                 byte[] start = token.getTablet().getPartition().getPartitionKeyStart();
                 byte[] end = token.getTablet().getPartition().getPartitionKeyEnd();
 
+                System.out.println(start.toString());
+                System.out.println(end.toString());
 
-                KuduInputSplit inputSplit = new KuduInputSplit(cont,strArray,this.table.getName().getBytes()
+
+                KuduInputSplit inputSplit = new KuduInputSplit(cont,hostName,this.table.getName().getBytes()
                         ,start, end);
 
                 //++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -257,7 +264,7 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
                 System.out.println("CONTADOR:" + cont);
             }
 
-        return inputs;
+            return inputs;
 
         } catch (Exception e) {
             System.out.println("Fallo");
@@ -272,11 +279,8 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
             if (scanner == null) {
                 throw new IOException("getScanner returned null");
             }
-
             KuduScanToken.KuduScanTokenBuilder tokenBuilder = client.newScanTokenBuilder(table);
-
             List<KuduScanToken> tokens = tokenBuilder.build();
-
             List<InputSplit> splits = new ArrayList<InputSplit>(tokens.size());
             for (KuduScanToken token : tokens) {
                 List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
@@ -295,7 +299,7 @@ public class KuduTableInputFormat implements InputFormat<RowResult, KuduInputSpl
         }
         */
 
-return null;
+        return null;
     }
 
     private void logSplitInfo(String action, LocatableInputSplit split) {
