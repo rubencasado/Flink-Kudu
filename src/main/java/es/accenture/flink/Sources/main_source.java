@@ -1,5 +1,9 @@
 package es.accenture.flink.Sources;
 
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.table.Row;
 import org.apache.flink.configuration.Configuration;
@@ -19,7 +23,7 @@ public class main_source {
 
 
 
-    public static void main (String[] args) throws IOException {
+    public static void main (String[] args) throws Exception {
 
         List<Row> rows = new ArrayList<>();
         RowResult rowRes;
@@ -43,15 +47,39 @@ public class main_source {
         }
         while(results.hasNext()) {
             rows.add(row);
-            System.out.println(row);
             row=prueba.nextRecord(row);
         }
         rows.add(row);
-        System.out.println("Fin de bucle de lectura");
+
+        for (Row r : rows){
+            System.out.println(r);
+        }
+
+        System.out.println("Generando dataset");
+        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        DataSet<Row> data = env
+                .createInput(prueba);
+
+        data.print();
 
 
+        System.out.println("dataset creado");
 
+        DataSet<Row> data2 = data
+                .map(new MapFunction<Row, Row>() {
 
+                    @Override
+                    public Row map(Row row) throws Exception {
+                        Row row2 = row;
+                        System.out.println("aaaaaaaaa");
+                        String value = row.productElement(1).toString();
+                        if (value.startsWith("value")) {
+                            row2.setField(1,"AAAAA");
+                            return row2;
+                        }
+                        return row;
+                    }
+                });
 
     }
 
