@@ -25,7 +25,7 @@ public class main_source {
         RowResult rowRes;
         Row row;
 
-        KuduTableInputFormat prueba = new KuduTableInputFormat();
+        KuduInputFormat prueba = new KuduInputFormat<Row>();
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
         System.out.println("Salido de configure");

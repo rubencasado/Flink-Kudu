@@ -8,6 +8,8 @@ import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.aggregation.Aggregations;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplit;
@@ -29,9 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link InputFormat} subclass that wraps the access for HTables.
+ * {@link InputFormat} subclass that wraps the access for KuduTables.
  */
-public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
+public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
 
     private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     private static final String TABLE_NAME = System.getProperty("tableName", "Table_1");
@@ -44,7 +46,7 @@ public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
     private boolean endReached = false;
     private int scannedRows = 0;
 
-    private static final Logger LOG = LoggerFactory.getLogger(KuduTableInputFormat.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KuduInputFormat.class);
 
     /**
      * Returns an instance of Scan that retrieves the required subset of records from the HBase table.
@@ -83,6 +85,10 @@ public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
                     break;
                 case BOOL:
                     row.setField(i, rowResult.getBoolean(i));
+                    break;
+                case BINARY:
+                    row.setField(i, rowResult.getBinary(i));
+                    break;
             }
         }
         return row;
@@ -102,9 +108,7 @@ public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
         columns.add(new ColumnSchema.ColumnSchemaBuilder("value", Type.STRING)
                 .build());
         List<String> rangeKeys = new ArrayList<>();
-        rangeKeys.add("key");
-        rangeKeys.add(1,"time");
-
+        System.out.println(rangeKeys);
         Schema schema = new Schema(columns);
         client.createTable(TABLE_NAME, schema,
                 new CreateTableOptions().setRangePartitionColumns(rangeKeys));
@@ -245,12 +249,6 @@ public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
                  **/
 
                 //++++++++++++++++++++++++++++++++++++++++++++++++++++
-                byte[] start = token.getTablet().getPartition().getPartitionKeyStart();
-                byte[] end = token.getTablet().getPartition().getPartitionKeyEnd();
-
-                System.out.println(start.toString());
-                System.out.println(end.toString());
-
 
                 KuduInputSplit inputSplit = new KuduInputSplit(cont,hostName,this.table.getName().getBytes());
 
@@ -330,12 +328,6 @@ public class KuduTableInputFormat implements InputFormat<Row, KuduInputSplit> {
     protected boolean includeRegionInSplit(final byte[] startKey, final byte[] endKey) {
         return true;
     }
-
-
-
-
-
-
 
     @Override
     public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
