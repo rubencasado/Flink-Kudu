@@ -20,7 +20,15 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     private String [] fieldsNames;
     private KuduTable table;
 
-    // Constructor que se usara cuando se quiera crear una nueva tabla, ya que contiene los datos del esquema
+    /**
+     * Constructor de la clase Sink que se empleara cuando se quiera crear una tabla nueva, ya que contiene los datos del esquema
+     *
+     * @param host          host de Kudu
+     * @param tableName     nombre de la tabla de Kudu
+     * @param fieldsNames   lista de nombres de columnas de la tabla a crear
+     * @param tableMode     modo de operar con la tabla (CREATE, APPEND u OVERRIDE)
+     * @throws KuduException
+     */
     public KuduSinkFunction(String host, String tableName, String [] fieldsNames, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
             System.err.println("ERROR: No se ha proporcionado el modo de tabla en el constructor");
@@ -33,7 +41,14 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
         this.tableMode = tableMode;
     }
 
-//    // Constructor que se usara cuando se use una tabla ya existente
+    /**
+     * COnstructor de la clase Sink que se empleara cuando se quiera usar una tabla ya existente. Esquema no requerido
+     *
+     * @param host          host de Kudu
+     * @param tableName     nombre de la tabla a usar
+     * @param tableMode     modo de operar con la tabla (CREATE, APPEND u OVERRIDE)
+     * @throws KuduException
+     */
     public KuduSinkFunction(String host, String tableName, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
             System.err.println("ERROR: No se ha proporcionado el modo de tabla en el constructor");
@@ -59,6 +74,17 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
 
     }
 
+    @Override
+    public void close() throws IOException {
+
+    }
+
+    /**
+     * Se encarga de insertar un Row dentro de la tabla indicada en el constructor
+     *
+     * @param row   los datos de una fila a insertar
+     * @throws IOException
+     */
     @Override
     public void writeRecord(Row row) throws IOException {
 
@@ -91,10 +117,5 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
         // Una vez completado el Insert, se escribe en la tabla
         utils.insertToTable(insert);
         System.out.println("Insertado el Row: " + utils.printRow(row));
-    }
-
-    @Override
-    public void close() throws IOException {
-
     }
 }
