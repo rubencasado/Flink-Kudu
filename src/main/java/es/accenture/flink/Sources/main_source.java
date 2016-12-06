@@ -29,7 +29,7 @@ public class main_source {
         RowResult rowRes;
         Row row;
 
-        KuduInputFormat prueba = new KuduInputFormat<Row>();
+        KuduInputFormat prueba = new KuduInputFormat();
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
         System.out.println("Salido de configure");

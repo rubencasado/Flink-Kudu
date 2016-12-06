@@ -20,19 +20,67 @@ public class Utils {
     private KuduClient client;
     private KuduSession session;
 
+    /**
+     * Constructor de la clase Utils, que crea un cliente de Kudu e inicia una sesion para poder realizar operaciones posteriormente
+     *
+     * @param host host de Kudu
+     * @throws KuduException
+     */
     public Utils(String host) throws KuduException {
         this.client = createClient(host);
         this.session = createSession();
     }
 
+    /**
+     * Devuelve un objeto de la clase KuduClient, que se usara para realizar operaciones posteriormente
+     *
+     * @param host  host de Kudu
+     * @return      cliente de Kudu
+     */
     private KuduClient createClient (String host){
         return new KuduClientBuilder(host).build();
     }
 
+    /**
+     * Devuelve un objeto de la clase KuduSession, que se usara para realizar operaciones posteriormente
+     *
+     * @return sesion de Kudu
+     */
     private KuduSession createSession (){
         return client.newSession();
     }
 
+    /**
+     * Devuelve una instancia de la tabla indicada en los parametros.
+     * <li> - En caso de existir, devuelve una instancia de la tabla para ser usada posteriormente </li>
+     * <li> - En caso de no existir, se crea una nueva tabla con los datos proporcionados y se devuelve la instancia </li>
+     * <li> - En ambos casos, se tiene en cuenta el modo de la tabla para realizar unas operaciones u otras: </li>
+     * <ul>
+     *  <li> Si el modo es CREATE: </li>
+     *  <ul>
+     *      <li> Si la tabla existe -> devuelve error ( ya que no se puede crear una tabla que ya existe ) </li>
+     *      <li> Si la tabla no existe y no se ha proporcionado la lista de nombres de columnas -> devuelve error </li>
+     *      <li> Si la tabla no existe y se ha proporcionado la lista de nombres de columnas -> se crea la tabla con los parametros dados y se devuelve la instancia de dicha tabla </li>
+     *  </ul>
+     *
+     *  <li> Si el modo es APPEND: </li>
+     *  <ul>
+     *      <li> Si la tabla existe -> se devuelve la instancia de la tabla </li>
+     *      <li> Si la tabla no existe -> devuelve error </li>
+     *  </ul>
+     *  <li> Si el modo es OVERRIDE: </li>
+     *  <ul>
+     *      <li> Si la tabla existe -> se borran todas las filas de dicha tabla y se devuelve una instancia de ella </li>
+     *      <li> Si la tabla no existe -> devuelve error </li>
+     *  </ul>
+     * </ul>
+     * @param tableName     nombre de la tabla a usar
+     * @param fieldsNames   lista de nombres de columnas de la tabla (para crear la tabla)
+     * @param row           lista de valores a insertar en una fila de la tabla (para saber tipos de las columnas)
+     * @param tableMode     modo de operacion para operar con la tabla (CREATE, APPEND u OVERRIDE)
+     * @return              instancia de la tabla indicada
+     * @throws KuduException
+     */
     public KuduTable useTable(String tableName, String [] fieldsNames, Row row, String tableMode) throws KuduException  {
         KuduTable table = null;
 
@@ -83,6 +131,15 @@ public class Utils {
         return table;
     }
 
+    /**
+     * Crea una tabla en Kudu y devuelve la instancia de esta tabla
+     *
+     * @param tableName     nombre de la tabla a crear
+     * @param fieldsNames   lista de nombres de columnas de la tabla
+     * @param row           lista de valores a insertar en una fila de la tabla (para saber tipos de las columnas)
+     * @return              instancia de la tabla indicada
+     * @throws KuduException
+     */
     public KuduTable createTable (String tableName, String [] fieldsNames, Row row) throws KuduException{
         KuduTable table = null;
         List<ColumnSchema> columns = new ArrayList<ColumnSchema>();
@@ -114,6 +171,11 @@ public class Utils {
         return table;
     }
 
+    /**
+     * Borra la tabla indicada
+     *
+     * @param tableName nombre de la tabla a borrar
+     */
     public void deleteTable (String tableName){
 
         System.out.println("Borrando la tabla \"" + tableName + "\"... ");
@@ -126,7 +188,11 @@ public class Utils {
     }
 
     /**
-     * Dado un Row, devuelve el tipo del valor en la posicion "pos", como objeto de la clase "Type", para su posterior manejo en Kudu
+     * Devuelve el tipo del valor en la posicion "pos", como objeto de la clase "Type"
+     *
+     * @param pos   posicion del Row
+     * @param row   lista de valores de la fila de una tabla
+     * @return      tipo del elemento "pos"-esimo de "row"
      */
     public Type getRowsPositionType (int pos, Row row){
         Type colType = null;
@@ -146,6 +212,13 @@ public class Utils {
         return colType;
     }
 
+    /**
+     * Devuelve una lista con todas las filas de la tabla indicada
+     *
+     * @param tableName nombre de la tabla a leer
+     * @return          lista de filas de la tabla (objetos Row)
+     * @throws KuduException
+     */
     public List<Row> readTable (String tableName) throws KuduException {
 
         KuduTable table = client.openTable(tableName);
@@ -196,6 +269,12 @@ public class Utils {
         return rowsList;
     }
 
+    /**
+     * Devuelve una representacion en pantalla de la fila de una tabla
+     *
+     * @param row   fila a mostrar
+     * @return      una cadena que contiene los datos de la fila indicada en el parametro
+     */
     public String printRow (Row row){
         String res = "";
         for(int i = 0; i< row.productArity(); i++){
@@ -205,7 +284,10 @@ public class Utils {
     }
 
     /**
-     * Borra todas las Rows de la tabla, hasta dejarla vacia
+     * Borra todas las filas de la tabla, hasta dejarla vacia
+     *
+     * @param tableName nombre de la tabla a vaciar
+     * @throws KuduException
      */
     public void clearTable (String tableName) throws KuduException {
         KuduTable table = client.openTable(tableName);
@@ -239,12 +321,16 @@ public class Utils {
         System.out.println("Borrado completo de la tabla");
     }
 
+    /**
+     * Devuelve una lista de nombres de columnas de una tabla
+     *
+     * @param table instancia de la tabla
+     * @return      lista de nombres de columnas de la tabla indicada en el parametro
+     */
     public String [] getNamesOfColumns(KuduTable table){
         List<ColumnSchema> columns = table.getSchema().getColumns();
         List<String> columnsNames = new ArrayList<>(); // Lista de nombres de las columnas
-//        System.out.println("Lista de columnas:");
         for (ColumnSchema schema : columns) {
-//            System.out.println(schema.getName());
             columnsNames.add(schema.getName());
         }
         String [] array = new String[columnsNames.size()];
@@ -252,14 +338,31 @@ public class Utils {
         return array;
     }
 
+    /**
+     * Inserta en una tabla de Kudu los datos proporcionados
+     *
+     * @param insert  objeto insert que contiene los datos a insertar en la tabla
+     * @throws KuduException
+     */
     public void insertToTable(Insert insert) throws KuduException {
         session.apply(insert);
     }
 
+    /**
+     * Borra de una tabla los datos proporcinados
+     *
+     * @param delete    objeto delete que contiene los datos a borrar de la tabla
+     * @throws KuduException
+     */
     public void deleteFromTable(Delete delete) throws KuduException {
         session.apply(delete);
     }
 
+    /**
+     * Devuelve una instancia del cliente de Kudu
+     *
+     * @return cliente de Kudu
+     */
     public KuduClient getClient() {
         return client;
     }
