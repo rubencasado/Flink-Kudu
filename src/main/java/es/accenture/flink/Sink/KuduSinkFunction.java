@@ -42,7 +42,7 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     }
 
     /**
-     * COnstructor de la clase Sink que se empleara cuando se quiera usar una tabla ya existente. Esquema no requerido
+     * Constructor de la clase Sink que se empleara cuando se quiera usar una tabla ya existente. Esquema no requerido
      *
      * @param host          host de Kudu
      * @param tableName     nombre de la tabla a usar
