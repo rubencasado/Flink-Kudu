@@ -1,4 +1,4 @@
-package es.accenture.flink.Sources;
+package es.accenture.flink.utils;
 
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -7,9 +7,14 @@ import org.apache.flink.api.common.typeutils.TypeSerializer;
 /**
  * Created by vadi on 12/12/16.
  */
-public class KuduTypeInformation<RowSerializable> extends TypeInformation{
+public class KuduTypeInformation extends TypeInformation{
 
-    public KuduTypeInformation() {
+    int arity;
+
+
+    public KuduTypeInformation(RowSerializable r) {
+        this.arity = r.getArity();
+
     }
 
     @Override
@@ -24,7 +29,7 @@ public class KuduTypeInformation<RowSerializable> extends TypeInformation{
 
     @Override
     public int getArity() {
-        return 0;
+        return this.getArity();
     }
 
     @Override
