@@ -1,8 +1,9 @@
-package es.accenture.flink.Sources;
+package es.accenture.flink.Job;
 
+import es.accenture.flink.Sources.KuduInputFormat;
+import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.utils.KuduTypeInformation;
 import es.accenture.flink.utils.RowSerializable;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
@@ -18,7 +19,7 @@ import java.util.List;
  * Created by vadi on 28/11/16.
  *
  */
-public class main_source {
+public class TestJobSource {
 
 
 
@@ -28,31 +29,28 @@ public class main_source {
         RowResult rowRes;
         RowSerializable row;
 
-        KuduInputFormat prueba = new KuduInputFormat();
+        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
-        System.out.println("Salido de configure");
         prueba.open(a);
-        System.out.println("Salido de Open");
+
 
 
         for (RowSerializable r : prueba.getRows()){
             System.out.println(r);
         }
 
-        System.out.println("Generando dataset");
 
 
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-        DataSet<RowSerializable> data = env.createInput(prueba, new KuduTypeInformation<RowSerializable>(prueba.getRows().get(0)));
+        DataSet<RowSerializable> data = env.createInput(prueba, new KuduTypeInformation(prueba.getRows().get(0)));
 
 
 
 
-        System.out.println("dataset creado");
 
-        DataSet<RowSerializable> data2 = data
+        /*DataSet<RowSerializable> data2 = data
                 .map(new MapFunction<RowSerializable, RowSerializable>()  {
 
                     @Override
@@ -66,8 +64,8 @@ public class main_source {
                         }
                         return row;
                     }
-                });
-        System.out.println("Fuera map");
+                });*/
+
 
     }
 

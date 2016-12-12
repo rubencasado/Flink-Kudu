@@ -10,11 +10,11 @@ import org.apache.flink.api.common.typeutils.TypeSerializer;
 public class KuduTypeInformation extends TypeInformation{
 
     int arity;
-
+    Class c;
 
     public KuduTypeInformation(RowSerializable r) {
         this.arity = r.getArity();
-
+        this.c = r.getClass();
     }
 
     @Override
@@ -29,17 +29,17 @@ public class KuduTypeInformation extends TypeInformation{
 
     @Override
     public int getArity() {
-        return this.getArity();
+        return this.arity;
     }
 
     @Override
     public int getTotalFields() {
-        return 0;
+        return this.arity;
     }
 
     @Override
     public Class getTypeClass() {
-        return null;
+        return this.c;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class KuduTypeInformation extends TypeInformation{
 
     @Override
     public String toString() {
-        return null;
+        return "Arity: " + this.arity + "   Class: " + this.c;
     }
 
     @Override
