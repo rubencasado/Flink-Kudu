@@ -7,6 +7,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.kudu.client.Insert;
 import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduTable;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
@@ -19,6 +20,7 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     private Utils utils = null;
     private String [] fieldsNames;
     private KuduTable table;
+    final static Logger logger = Logger.getLogger(KuduSinkFunction.class);
 
     /**
      * Constructor de la clase Sink que se empleara cuando se quiera crear una tabla nueva, ya que contiene los datos del esquema
@@ -116,6 +118,6 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
         }
         // Una vez completado el Insert, se escribe en la tabla
         utils.insertToTable(insert);
-        System.out.println("Insertado el Row: " + utils.printRow(row));
+        logger.info("Insertado el Row: " + utils.printRow(row));
     }
 }
