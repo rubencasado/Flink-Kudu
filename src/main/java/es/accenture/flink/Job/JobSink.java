@@ -1,16 +1,12 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduSinkFunction;
-import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.common.functions.GroupReduceFunction;
 
+import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.table.Row;
-import org.apache.flink.util.Collector;
-
-
 
 /**
  * Created by dani on 9/12/16.
@@ -32,10 +28,10 @@ public class JobSink {
 
         DataSet<String> input = env.fromElements("fila100 value100 descripcion1000");
 
-        DataSet<Row> out = input.map(new MapFunction<String, Row>() {
+        DataSet<RowSerializable> out = input.map(new MapFunction<String, RowSerializable>() {
             @Override
-            public Row map(String inputs) throws Exception {
-                Row r = new Row(3);
+            public RowSerializable map(String inputs) throws Exception {
+                RowSerializable r = new RowSerializable(3);
                 Integer i = 0;
                 for (String s : inputs.split(" ")) {
                     r.setField(i, s);

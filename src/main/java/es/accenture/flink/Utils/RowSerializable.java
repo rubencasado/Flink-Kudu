@@ -1,4 +1,4 @@
-package es.accenture.flink.utils;
+package es.accenture.flink.Utils;
 
 import org.apache.flink.api.table.Row;
 
@@ -32,4 +32,8 @@ public class RowSerializable extends Row implements Serializable {
         this.fields2 = (Object[]) fs[0].get(row);
     }
 
+    @Override
+    public boolean equals(Object that) {
+        return false;
+    }
 }

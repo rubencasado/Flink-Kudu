@@ -1,8 +1,8 @@
 package es.accenture.flink.Sink;
 
 import es.accenture.flink.Sink.utils.Utils;
+import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.io.RichOutputFormat;
-import org.apache.flink.api.table.Row;
 import org.apache.flink.configuration.Configuration;
 import org.apache.kudu.client.Insert;
 import org.apache.kudu.client.KuduException;
@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * Created by sshvayka on 21/11/16.
  */
-public class KuduSinkFunction extends RichOutputFormat<Row> {
+public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
 
     private String host, tableName, tableMode;
     private Utils utils = null;
@@ -88,7 +88,7 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
      * @throws IOException
      */
     @Override
-    public void writeRecord(Row row) throws IOException {
+    public void writeRecord(RowSerializable row) throws IOException {
 
         // Miramos la situacion de la tabla (si existe o no) en funcion del modo, la creamos o no
         this.table = utils.useTable(tableName, fieldsNames, row, tableMode);

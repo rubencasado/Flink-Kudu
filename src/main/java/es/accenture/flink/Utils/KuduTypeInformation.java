@@ -1,4 +1,4 @@
-package es.accenture.flink.utils;
+package es.accenture.flink.Utils;
 
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
