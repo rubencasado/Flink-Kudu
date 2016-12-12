@@ -2,8 +2,8 @@ package es.accenture.flink.Job;
 
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Sources.KuduInputSplit;
-import es.accenture.flink.utils.KuduTypeInformation;
-import es.accenture.flink.utils.RowSerializable;
+import es.accenture.flink.Utils.KuduTypeInformation;
+import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 

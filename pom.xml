@@ -143,7 +143,6 @@
                                     <exclude>org.apache.commons:commons-lang3</exclude>
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                     <exclude>org.slf4j:slf4j-log4j12</exclude>
-                                    <exclude>log4j:log4j</exclude>
                                     <exclude>org.apache.commons:commons-math</exclude>
                                     <exclude>org.apache.sling:org.apache.sling.commons.json</exclude>
                                     <exclude>commons-logging:commons-logging</exclude>

@@ -1,5 +1,0 @@
-<root>
-    <item name='org.apache.flink.api.table.typeutils.RowSerializer'>
-        <annotation name='java.lang.Deprecated'/>
-    </item>
-</root>
