@@ -13,9 +13,9 @@ import org.apache.flink.api.table.Row;
  */
 public class JobSink {
 
-    public static final String KUDU_MASTER = System.setProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.setProperty("tableName", "sample");
-    public static final String TABLE_NAME2 = System.setProperty("tableName2", "sample2");
+    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
+    public static final String TABLE_NAME = System.getProperty("tableName", "sample");
+    public static final String TABLE_NAME2 = System.getProperty("tableName2", "sample2");
 
     public static void main(String[] args) throws Exception {
 
