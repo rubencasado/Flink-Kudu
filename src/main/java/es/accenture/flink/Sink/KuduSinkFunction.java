@@ -102,7 +102,7 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
 
         for (int index = 0; index < row.productArity(); index++){
 
-            //Create the insert with the previous data in function of the type, a different "add"
+            //Create the insert with the previous data in function of the type ,a different "add"
             switch(utils.getRowsPositionType(index, row).getName()){
                 case "string":
                     insert.getRow().addString(fieldsNames[index], (String)(row.productElement(index)));
