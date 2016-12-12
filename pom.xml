@@ -64,6 +64,12 @@
             <artifactId>flink-table_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
+        <!-- LOG4J -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>LATEST</version>
+        </dependency>
 
     </dependencies>
 

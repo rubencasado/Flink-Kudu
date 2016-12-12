@@ -7,6 +7,7 @@ import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.*;
 import org.apache.kudu.client.KuduClient.KuduClientBuilder;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,9 @@ public class Utils {
     // Atributos de Kudu
     private KuduClient client;
     private KuduSession session;
+
+    // LOG4J
+    final static Logger logger = Logger.getLogger(Utils.class);
 
     /**
      * Constructor de la clase Utils, que crea un cliente de Kudu e inicia una sesion para poder realizar operaciones posteriormente
@@ -88,12 +92,12 @@ public class Utils {
             case "CREATE":
                 System.out.println("Modo CREATE");
                 if (client.tableExists(tableName)){
-                    System.err.println("Error, la tabla ya existe");
+                    logger.error("ERROR: The table already exists.");
                     System.exit(-1);
                 } else{
                     if(fieldsNames == null || fieldsNames[0].isEmpty()){
                         // No ha de darse ya que hay que proporcionar los parametros "fields" y "primary" con el modo CREATE
-                        System.err.println("Parametros incorrectos, por favor, revise el constructor usado ya que no concuerda el modo de la tabla con los datos proporcionados");
+                        logger.error("ERROR: Incorrect parameters, please check the constructor method. Missing \"fields\" parameter.");
                         System.exit(-1);
                     } else {
                         table = createTable(tableName, fieldsNames, row);
@@ -105,10 +109,10 @@ public class Utils {
             case "APPEND":
                 System.out.println("Modo APPEND");
                 if (client.tableExists(tableName)){
-                    System.out.println("Existe una tabla con el nombre \"" + tableName + "\"");
+                    logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
                     table = client.openTable(tableName);
                 } else{
-                    System.err.println("ERROR: la tabla no existe asi que no se puede hacer APPEND");
+                    logger.error("ERROR: The table doesn't exist, so can't do APPEND operation");
                     System.exit(-1);
                 }
 
@@ -117,17 +121,16 @@ public class Utils {
             case "OVERRIDE":
                 System.out.println("Modo OVERRIDE");
                 if (client.tableExists(tableName)){
+                    logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
                     clearTable(tableName);
                     table = client.openTable(tableName);
                 } else{
-                    System.err.println("ERROR: la tabla no existe asi que no se puede hacer OVERRIDE");
+                    logger.error("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                     System.exit(-1);
                 }
 
                 break;
-
         }
-
         return table;
     }
 
@@ -146,7 +149,7 @@ public class Utils {
         List<String> rangeKeys = new ArrayList<String>(); // Clave primaria
         rangeKeys.add(fieldsNames[0]);
 
-        System.out.println("Creando la tabla \"" + tableName + "\"...");
+        logger.info("Creating the table \"" + tableName + "\"...");
         for (int i = 0; i < fieldsNames.length; i++){
             ColumnSchema col;
             String colName = fieldsNames[i];
@@ -163,9 +166,9 @@ public class Utils {
         Schema schema = new Schema(columns);
         if ( ! client.tableExists(tableName)) {
             table = client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys));
-            System.out.println("La tabla ha sido creada con exito");
+            logger.info("SUCCESS: The table has been created successfully");
         } else {
-            System.err.println("Error al crear la tabla (ya existe)");
+            logger.error("ERROR: The table already exists");
         }
 
         return table;
@@ -178,12 +181,12 @@ public class Utils {
      */
     public void deleteTable (String tableName){
 
-        System.out.println("Borrando la tabla \"" + tableName + "\"... ");
+        logger.info("Deleting the table \"" + tableName + "\"...");
         try {
             client.deleteTable(tableName);
-            System.out.println("Tabla borrada con exito");
+            logger.info("SUCCESS: Table deleted successfully");
         } catch (KuduException e) {
-            System.err.println("La tabla " + tableName + " no existe, por lo que no puede ser borrada");
+            logger.error("The table \"" + tableName  +"\" doesn't exist, so can't be deleted.", e);
         }
     }
 
@@ -227,45 +230,42 @@ public class Utils {
         String[] columnsNames = getNamesOfColumns(table);
         // La lista que se devolvera, con todos los Rows
         List<Row> rowsList = new ArrayList<>();
-
-        System.out.println();
+        String content = "The table contains:";
 
         int number = 1, posRow = 0;
-        System.out.println("La tabla contiene:");
         while (scanner.hasMoreRows()) {
             for (RowResult row : scanner.nextRows()) { //Se sacan las Rows
                 Row rowToInsert = new Row(columnsNames.length);
-
-                System.out.print("Row " + number + ": ");
+                content += "\nRow " + number + ": \n";
                 for (String col : columnsNames) { // Por cada columna, se determina su tipo, y asi se sabe como leerlo
 
                     String colType = row.getColumnType(col).getName();
                     switch (colType) {
                         case "string":
-                            System.out.print(row.getString(col) + "|");
+                            content += row.getString(col) + "|";
                             rowToInsert.setField(posRow, row.getString(col));
                             posRow++;
                             break;
                         case "int32":
-                            System.out.print(row.getInt(col) + "|");
+                            content += row.getInt(col) + "|";
                             rowToInsert.setField(posRow, row.getInt(col));
                             posRow++;
                             break;
                         case "bool":
-                            System.out.print(row.getBoolean(col) + "|");
+                            content += row.getBoolean(col) + "|";
                             rowToInsert.setField(posRow, row.getBoolean(col));
                             posRow++;
                             break;
                         default:
-
+                            break;
                     }
                 }
-                System.out.println();
                 rowsList.add(rowToInsert);
                 number++;
                 posRow = 0;
             }
         }
+        logger.info(content);
         return rowsList;
     }
 
@@ -318,7 +318,7 @@ public class Utils {
         for(Delete d : deletes){
             deleteFromTable(d);
         }
-        System.out.println("Borrado completo de la tabla");
+        logger.info("SUCCESS: The table has been emptied successfully");
     }
 
     /**
