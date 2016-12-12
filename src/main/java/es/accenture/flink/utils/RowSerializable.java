@@ -1,4 +1,4 @@
-package es.accenture.flink.Sources;
+package es.accenture.flink.utils;
 
 import org.apache.flink.api.table.Row;
 
@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 public class RowSerializable extends Row implements Serializable {
 
 
-    public Object[] fields2;
+    private Object[] fields2;
 
     public RowSerializable(int arity) {
         super(arity);
@@ -20,6 +20,10 @@ public class RowSerializable extends Row implements Serializable {
     protected RowSerializable() {
         super(0);
 
+    }
+
+    public int getArity(){
+        return this.fields2.length;
     }
 
     public void serialize(Row row) throws IllegalAccessException {
