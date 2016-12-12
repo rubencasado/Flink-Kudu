@@ -47,5 +47,6 @@ public class JobSink {
 
         out.output(new KuduSinkFunction(KUDU_MASTER, TABLE_NAME, columnNames,"APPEND"));
         env.execute();
+
     }
 }

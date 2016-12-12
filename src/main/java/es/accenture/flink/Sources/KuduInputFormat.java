@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * {@link InputFormat} subclass that wraps the access for KuduTables.
  */
-public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
+public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSplit> {
 
     private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     private static final String TABLE_NAME = System.getProperty("tableName", "Table_1");
@@ -42,7 +42,8 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
     protected transient KuduScanner scanner = null;
     protected transient KuduClient client = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
 
-    private RowResultIterator results = null;
+    private transient RowResultIterator results = null;
+    private List<RowSerializable> rows = null;
     private boolean endReached = false;
     private int scannedRows = 0;
 
@@ -67,17 +68,22 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
         return TABLE_NAME;
     }
 
+    public List<RowSerializable> getRows(){
+        return this.rows;
+    }
+
     /**
      * The output from Kudu is always an instance of {@link RowResult}.
      * This method is to copy the data in the RowResult instance into the required {@link Row}
      * @param rowResult The Result instance from Kudu that needs to be converted
      * @return The approriate instance of {@link Row} that contains the needed information.
      */
-    public Row RowResultToRow(RowResult rowResult){
-        Row row = new Row(rowResult.getColumnProjection().getColumnCount());
+    public RowSerializable RowResultToRow(RowResult rowResult) throws IllegalAccessException {
+        RowSerializable row = new RowSerializable(rowResult.getColumnProjection().getColumnCount());
         for (int i=0; i<rowResult.getColumnProjection().getColumnCount(); i++){
             switch(rowResult.getColumnType(i).getDataType()){
                 case INT32:
+
                     row.setField(i, rowResult.getInt(i));
                     break;
                 case STRING:
@@ -91,6 +97,7 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
                     break;
             }
         }
+        row.serialize(row);
         return row;
     }
 
@@ -172,9 +179,7 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
             KuduInputSplit[] splits = createInputSplits(3);
             System.out.println("Se han generado " + splits.length+ " splits");
 
-        } catch (IOException e) {
-            LOG.error("Could not open Kudu Table named: " + TABLE_NAME, e);
-        }
+
 
         endReached = false;
         scannedRows = 0;
@@ -182,8 +187,37 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
         this.scanner = client.newScannerBuilder(table)
                 .build();
         this.results = scanner.nextRows();
-        System.out.println(results.toString());
+        this.generateRows();
+        } catch (IOException e) {
+            LOG.error("Could not open Kudu Table named: " + TABLE_NAME, e);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
+
+
+    public void generateRows() throws IllegalAccessException, IOException {
+        List<RowSerializable> rows = new ArrayList<>();
+        RowResult rowRes;
+        RowSerializable row;
+        try {
+            rowRes=results.next();
+            row=this.RowResultToRow(rowRes);
+        } catch (Exception e){
+            rowRes=null;
+            row=this.RowResultToRow(rowRes);
+            System.out.println("TABLA VACIA");
+        }
+        while(results.hasNext()) {
+            rows.add(row);
+            row=this.nextRecord(row);
+        }
+        rows.add(row);
+
+        this.rows=rows;
+    }
+
+
 
     @Override
     public boolean reachedEnd() throws IOException {
@@ -191,13 +225,13 @@ public class KuduInputFormat implements InputFormat<Row, KuduInputSplit> {
     }
 
     @Override
-    public Row nextRecord(Row reuse) throws IOException {
+    public RowSerializable nextRecord(RowSerializable reuse) throws IOException {
         if (scanner == null) {
             throw new IOException("No table scanner provided!");
         }
         try {
             RowResult res = this.results.next();
-            Row resRow= RowResultToRow(res);
+            RowSerializable resRow= RowResultToRow(res);
 
             if (res != null) {
                 scannedRows++;
