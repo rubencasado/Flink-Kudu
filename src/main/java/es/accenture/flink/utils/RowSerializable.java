@@ -1,4 +1,4 @@
-package es.accenture.flink.Sources;
+package es.accenture.flink.utils;
 
 import org.apache.flink.api.table.Row;
 
@@ -20,6 +20,10 @@ public class RowSerializable extends Row implements Serializable {
     protected RowSerializable() {
         super(0);
 
+    }
+
+    public int getArity(){
+        return this.fields2.length;
     }
 
     public void serialize(Row row) throws IllegalAccessException {

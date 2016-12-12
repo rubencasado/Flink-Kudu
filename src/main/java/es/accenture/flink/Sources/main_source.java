@@ -1,20 +1,14 @@
 package es.accenture.flink.Sources;
 
-import org.apache.flink.api.common.ExecutionConfig;
+import es.accenture.flink.utils.KuduTypeInformation;
+import es.accenture.flink.utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
-import org.apache.flink.api.java.io.TypeSerializerOutputFormat;
-import org.apache.flink.api.table.Row;
-import org.apache.flink.api.table.typeutils.RowTypeInfo;
 import org.apache.flink.configuration.Configuration;
 
 import org.apache.kudu.client.RowResult;
-import org.apache.kudu.client.RowResultIterator;
-
 
 
 import java.util.ArrayList;
@@ -51,68 +45,13 @@ public class main_source {
 
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-        DataSet<RowSerializable> data = env.createInput(prueba, new TypeInformation<RowSerializable>() {
-            @Override
-            public boolean isBasicType() {
-                return false;
-            }
-
-            @Override
-            public boolean isTupleType() {
-                return false;
-            }
-
-            @Override
-            public int getArity() {
-                return 0;
-            }
-
-            @Override
-            public int getTotalFields() {
-                return 0;
-            }
-
-            @Override
-            public Class<RowSerializable> getTypeClass() {
-                return null;
-            }
-
-            @Override
-            public boolean isKeyType() {
-                return false;
-            }
-
-            @Override
-            public TypeSerializer<RowSerializable> createSerializer(ExecutionConfig executionConfig) {
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return null;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return false;
-            }
-
-            @Override
-            public int hashCode() {
-                return 0;
-            }
-
-            @Override
-            public boolean canEqual(Object o) {
-                return false;
-            }
-        });
+        DataSet<RowSerializable> data = env.createInput(prueba, new KuduTypeInformation<RowSerializable>(prueba.getRows().get(0)));
 
 
 
 
         System.out.println("dataset creado");
-/*
+
         DataSet<RowSerializable> data2 = data
                 .map(new MapFunction<RowSerializable, RowSerializable>()  {
 
@@ -129,7 +68,7 @@ public class main_source {
                     }
                 });
         System.out.println("Fuera map");
-*/
+
     }
 
 
