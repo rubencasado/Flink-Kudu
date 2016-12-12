@@ -23,12 +23,12 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     final static Logger logger = Logger.getLogger(KuduSinkFunction.class);
 
     /**
-     * Constructor de la clase Sink que se empleara cuando se quiera crear una tabla nueva, ya que contiene los datos del esquema
-     *
-     * @param host          host de Kudu
-     * @param tableName     nombre de la tabla de Kudu
-     * @param fieldsNames   lista de nombres de columnas de la tabla a crear
-     * @param tableMode     modo de operar con la tabla (CREATE, APPEND u OVERRIDE)
+     * Builder to use when you want to create a new table as it contains schema data
+     * Sink class builder that it will be used when you want to create a new table as it contains schema data
+     * @param host         Kudu host
+     * @param  tableName   Kudu table name
+     * @param fieldsNames  List of column names in the table to be created
+     * @param tableMode    Way to operate with table(CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
     public KuduSinkFunction(String host, String tableName, String [] fieldsNames, String tableMode) throws KuduException {
@@ -44,13 +44,14 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     }
 
     /**
-     * Constructor de la clase Sink que se empleara cuando se quiera usar una tabla ya existente. Esquema no requerido
-     *
-     * @param host          host de Kudu
-     * @param tableName     nombre de la tabla a usar
-     * @param tableMode     modo de operar con la tabla (CREATE, APPEND u OVERRIDE)
+     * Builder to be used when using an existing table
+     * Sink class builder that it will be used when you want to create a new table as it contains schema data
+     * @param host         Kudu host
+     * @param  tableName   Kudu table name to be used
+     * @param tableMode    Way to operate with table(CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
+
     public KuduSinkFunction(String host, String tableName, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
             System.err.println("ERROR: No se ha proporcionado el modo de tabla en el constructor");
@@ -82,26 +83,26 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
     }
 
     /**
-     * Se encarga de insertar un Row dentro de la tabla indicada en el constructor
-     *
-     * @param row   los datos de una fila a insertar
+     * It's responsible to insert  a row into the indicated table by the builder
+     * @param row  Data of a row to insert
      * @throws IOException
      */
+    
     @Override
     public void writeRecord(Row row) throws IOException {
 
-        // Miramos la situacion de la tabla (si existe o no) en funcion del modo, la creamos o no
+        //Look at the situation of the table(exist or not) depending of the mode,the table is create or not
         this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
-        // Caso APPEND, con constructor sin nombres de columnas (porque sino luego da NullPointerException)
+        //Case APPEND, with builder without column names , because otherwise it exits NullPointerException
         if(fieldsNames == null){
             fieldsNames = utils.getNamesOfColumns(table);
         }
-        // Inicializacion del objeto insert
+        //Initialization of the insert object
         Insert insert = table.newInsert();
 
         for (int index = 0; index < row.productArity(); index++){
 
-            // Se crea el insert con los anteriores datos, en funcion del tipo, un "add" distinto
+            //Create the insert with the previous data in function of the type ,a different "add"
             switch(utils.getRowsPositionType(index, row).getName()){
                 case "string":
                     insert.getRow().addString(fieldsNames[index], (String)(row.productElement(index)));
@@ -116,7 +117,7 @@ public class KuduSinkFunction extends RichOutputFormat<Row> {
                     break;
             }
         }
-        // Una vez completado el Insert, se escribe en la tabla
+        //When the Insert is complete, write it in the table
         utils.insertToTable(insert);
         logger.info("Insertado el Row: " + utils.printRow(row));
     }
