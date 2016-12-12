@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 public class RowSerializable extends Row implements Serializable {
 
 
-    public Object[] fields2;
+    private Object[] fields2;
 
     public RowSerializable(int arity) {
         super(arity);

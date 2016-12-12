@@ -27,11 +27,11 @@ public class KuduInputSplit implements InputSplit {
      *        the names of the hosts storing the data the input split refers to
      * @param tableName
      *        the name of the table to retrieve data from
-//     * @param startRow
-//     *        the start row of the split
-//     * @param endRow
-//     *        the end row of the split
-//     */
+    //     * @param startRow
+    //     *        the start row of the split
+    //     * @param endRow
+    //     *        the end row of the split
+    //     */
     KuduInputSplit(final int splitNumber, final String[] hostnames, final byte[] tableName) {
 
         this.tableName = tableName;
