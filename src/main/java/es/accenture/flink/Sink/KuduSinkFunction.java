@@ -33,7 +33,7 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
      */
     public KuduSinkFunction(String host, String tableName, String [] fieldsNames, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            System.err.println("ERROR: No se ha proporcionado el modo de tabla en el constructor");
+            logger.error("ERROR: missing table mode parameter at the constructor method");
             System.exit(-1);
         }
         this.host = host;
@@ -54,11 +54,11 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
 
     public KuduSinkFunction(String host, String tableName, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            System.err.println("ERROR: No se ha proporcionado el modo de tabla en el constructor");
+            logger.error("ERROR: missing table mode parameter at the constructor method");
             System.exit(-1);
         }
         if(tableMode.equals("CREATE")){
-            System.err.println("ERROR: Para este modo han de proporcionarse los nombres de las columnas de la tabla en el constructor");
+            logger.error("ERROR: missing fields parameter at the constructor method");
             System.exit(-1);
         }
         this.host = host;
@@ -119,6 +119,6 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
         }
         //When the Insert is complete, write it in the table
         utils.insertToTable(insert);
-        logger.info("Insertado el Row: " + utils.printRow(row));
+        logger.info("Inserted the Row: " + utils.printRow(row));
     }
 }
