@@ -1,55 +1,52 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduSinkFunction;
-import es.accenture.flink.Sink.utils.Utils;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.GroupReduceFunction;
+
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.table.Row;
-import org.apache.flink.api.java.DataSet;
+import org.apache.flink.util.Collector;
 
-import java.util.List;
+
 
 /**
- * Created by sergiy on 9/12/16.
+ * Created by dani on 9/12/16.
  */
 public class JobSink {
 
-    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
+    public static final String KUDU_MASTER = System.setProperty("kuduMaster", "localhost");
+    public static final String TABLE_NAME = System.setProperty("tableName", "sample");
+    public static final String TABLE_NAME2 = System.setProperty("tableName2", "sample2");
 
     public static void main(String[] args) throws Exception {
 
+        String [] columnNames = new String[3];
+        columnNames[0] = "key";
+        columnNames[1] = "value";
+        columnNames[2] = "descripcion";
+
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-        Utils u = new Utils(KUDU_MASTER);
 
-        String [] fields = {"nick", "age", "male"};
-        String tableName = "users";
+        DataSet<String> input = env.fromElements("fila100 value100 descripcion1000");
 
-        Row row1 = new Row(3);
-        row1.setField(0, "sergiy");
-        row1.setField(1, 21);
-        row1.setField(2, true);
-        Row row2 = new Row(3);
-        row2.setField(0, "virginia");
-        row2.setField(1, 22);
-        row2.setField(2, false);
+        DataSet<Row> out = input.map(new MapFunction<String, Row>() {
+            @Override
+            public Row map(String inputs) throws Exception {
+                Row r = new Row(3);
+                Integer i = 0;
+                for (String s : inputs.split(" ")) {
+                    r.setField(i, s);
+                    i++;
+                }
+                return r;
+            }
+        });
 
-        DataSet<Row> data = env.fromElements(row1, row2);
-
-//        u.createTable(tableName, fields, row1);
-//        List<Row> lista = data.collect();
-//
-//        System.out.println("EL DATASET TIENE:");
-//        for(Row r : lista){
-//            System.out.println(u.printRow(r));
-//        }
-
-
-        data.output(new KuduSinkFunction(KUDU_MASTER, tableName, fields, "APPEND"));
-
-        System.out.println("LA TABLA TIENE:");
-        List<Row> tableResult = u.readTable(tableName);
-        for(Row row : tableResult){
-            System.out.println(u.printRow(row));
-        }
+        out.output(new KuduSinkFunction(KUDU_MASTER, TABLE_NAME, columnNames,"APPEND"));
+        env.execute();
 
     }
 }
