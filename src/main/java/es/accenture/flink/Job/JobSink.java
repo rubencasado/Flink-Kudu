@@ -6,7 +6,6 @@ import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.table.Row;
 
 /**
  * Created by dani on 9/12/16.
@@ -41,7 +40,7 @@ public class JobSink {
             }
         });
 
-        out.output(new KuduSinkFunction(KUDU_MASTER, TABLE_NAME, columnNames,"APPEND"));
+        out.output(new KuduSinkFunction(KUDU_MASTER, TABLE_NAME, columnNames, "CREATE"));
         env.execute();
 
     }
