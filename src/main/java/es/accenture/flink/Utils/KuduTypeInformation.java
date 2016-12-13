@@ -9,11 +9,11 @@ import org.apache.flink.api.common.typeutils.TypeSerializer;
  */
 public class KuduTypeInformation extends TypeInformation{
 
-    int arity;
-    Class c;
+    private int arity;
+    private Class c;
 
     public KuduTypeInformation(RowSerializable r) {
-        this.arity = r.getArity();
+        this.arity = r.productArity();
         this.c = r.getClass();
     }
 

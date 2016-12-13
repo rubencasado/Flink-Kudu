@@ -3,37 +3,62 @@ package es.accenture.flink.Utils;
 import org.apache.flink.api.table.Row;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 
 /**
- * Created by vadi on 9/12/16.
+ * Created by luis on 13/12/16.
  */
 public class RowSerializable extends Row implements Serializable {
 
-
     private Object[] fields2;
 
-    public RowSerializable(int arity) {
+    /**
+     * Creates an instance of RowSerializable
+     * @param arity
+     */
+    public RowSerializable(int arity){
         super(arity);
-
-    }
-    protected RowSerializable() {
-        super(0);
-
+        this.fields2 = new Object[arity];
     }
 
-    public int getArity(){
+    /**
+     * returns number of fields contained in a Row
+     * @return int arity
+     */
+    public int productArity(){
         return this.fields2.length;
     }
 
-    public void serialize(Row row) throws IllegalAccessException {
-        Field[] fs = row.getClass().getSuperclass().getDeclaredFields();
-        fs[0].setAccessible(true);
-        this.fields2 = (Object[]) fs[0].get(row);
+    /**
+     * Inserts the "field" Object in the position "i".
+     * @param i
+     * @param field
+     */
+    public void setField(int i, Object field){
+        this.fields2[i]=field;
     }
 
-    @Override
-    public boolean equals(Object that) {
+    /**
+     * returns the Object contained in the position "i" from the RowSerializable.
+     * @param i
+     * @return Object
+     */
+    public Object productElement(int i){
+        return this.fields2[i];
+    }
+
+    /**
+     * returns a String element with the fields of the RowSerializable
+     * @return String
+     */
+    public String toString(){
+        String str=fields2[0].toString();
+        for (int i=1; i<fields2.length; i++){
+            str=str+", " + fields2[i].toString();
+        }
+        return str;
+    }
+
+    public boolean equals(Object object){
         return false;
     }
 }
