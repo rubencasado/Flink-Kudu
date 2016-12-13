@@ -9,6 +9,7 @@ import org.apache.kudu.client.*;
 import org.apache.kudu.client.KuduClient.KuduClientBuilder;
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,13 +27,13 @@ public class Utils {
 
     /**
      * Builder Util Class which creates a Kudu client and log in to be able to perform operations later
-     * @param host Kudu host
+//     * @param host Kudu host
      * @throws KuduException
      */
 
     public Utils(String host) throws KuduException {
-        this.client = createClient(host);
-        this.session = createSession();
+        this.client = new KuduClient.KuduClientBuilder(host).build();
+        this.session = this.client.newSession();
     }
 
      /**
@@ -117,7 +118,6 @@ public class Utils {
                     logger.error("ERROR: The table doesn't exist, so can't do APPEND operation");
                     System.exit(-1);
                 }
-
                 break;
 
             case "OVERRIDE":

@@ -4,9 +4,7 @@ import es.accenture.flink.Sink.utils.Utils;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
-import org.apache.kudu.client.Insert;
-import org.apache.kudu.client.KuduException;
-import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -17,9 +15,9 @@ import java.io.IOException;
 public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
 
     private String host, tableName, tableMode;
-    private Utils utils = null;
     private String [] fieldsNames;
-    private KuduTable table;
+    private transient Utils utils;
+    private transient KuduTable table;
     final static Logger logger = Logger.getLogger(KuduSinkFunction.class);
 
     /**
@@ -37,7 +35,6 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
             System.exit(-1);
         }
         this.host = host;
-        this.utils = new Utils(host);
         this.tableName = tableName;
         this.fieldsNames = fieldsNames;
         this.tableMode = tableMode;
@@ -47,7 +44,7 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
      * Builder to be used when using an existing table
      * Sink class builder that it will be used when you want to create a new table as it contains schema data
      * @param host         Kudu host
-     * @param  tableName   Kudu table name to be used
+     * @param tableName   Kudu table name to be used
      * @param tableMode    Way to operate with table(CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
@@ -62,7 +59,6 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
             System.exit(-1);
         }
         this.host = host;
-        this.utils = new Utils(host);
         this.tableName = tableName;
         this.tableMode = tableMode;
     }
@@ -90,9 +86,10 @@ public class KuduSinkFunction extends RichOutputFormat<RowSerializable> {
     
     @Override
     public void writeRecord(RowSerializable row) throws IOException {
-
+        this.utils = new Utils(host);
         //Look at the situation of the table(exist or not) depending of the mode,the table is create or not
         this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
+
         //Case APPEND, with builder without column names , because otherwise it exits NullPointerException
         if(fieldsNames == null){
             fieldsNames = utils.getNamesOfColumns(table);
