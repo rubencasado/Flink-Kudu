@@ -1,10 +1,13 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sources.KuduInputFormat;
+import es.accenture.flink.Sources.KuduInputSplit;
+import es.accenture.flink.Utils.KuduTypeInformation;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.configuration.Configuration;
 
 /**
  * Created by dani on 9/12/16.
@@ -17,9 +20,15 @@ public class JobSource {
 
     public static void main(String[] args) throws Exception {
 
+        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
+        KuduInputSplit a = null;
+        prueba.configure(new Configuration());
+        prueba.open(a);
+
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        DataSet<RowSerializable> source = env.createInput(new KuduInputFormat(TABLE_NAME, KUDU_MASTER));
+        KuduTypeInformation typeInformation = new KuduTypeInformation(prueba.getRows().get(0));
+        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
 
         source.map(new MapFunction<RowSerializable, String>() {
 
@@ -30,7 +39,7 @@ public class JobSource {
                     }
                 });
 
-        source.print();
+        source.writeAsText("~/test.txt");
 
         env.execute();
     }

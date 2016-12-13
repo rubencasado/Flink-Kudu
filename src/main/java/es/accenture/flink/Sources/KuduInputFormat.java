@@ -116,7 +116,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
                     break;
             }
         }
-        row.serialize(row);
         return row;
     }
 
