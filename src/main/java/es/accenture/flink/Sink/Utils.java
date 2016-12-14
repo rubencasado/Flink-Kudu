@@ -1,4 +1,4 @@
-package es.accenture.flink.Sink.utils;
+package es.accenture.flink.Sink;
 
 import org.apache.flink.api.table.Row;
 import org.apache.kudu.ColumnSchema;
@@ -9,7 +9,6 @@ import org.apache.kudu.client.*;
 import org.apache.kudu.client.KuduClient.KuduClientBuilder;
 import org.apache.log4j.Logger;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +17,7 @@ import java.util.List;
  */
 public class Utils {
 
-    //Kudu attributes
+    //Kudu variables
     private KuduClient client;
     private KuduSession session;
 
@@ -27,7 +26,7 @@ public class Utils {
 
     /**
      * Builder Util Class which creates a Kudu client and log in to be able to perform operations later
-//     * @param host Kudu host
+     * @param host Kudu host
      * @throws KuduException
      */
 
@@ -36,77 +35,62 @@ public class Utils {
         this.session = this.client.newSession();
     }
 
-     /**
-     * Return an object of KuduClient class that it will be used to perform operations later
-     *
-     * @param host  host de Kudu
-     * @return      cliente de Kudu
-     */
-    private KuduClient createClient (String host){
-        return new KuduClientBuilder(host).build();
-    }
-
-    /**
-     * Return an object of KuduSession that it will be used to perform operations later
-     *
-     * @return sesion de Kudu
-     */
-    private KuduSession createSession (){
-        return client.newSession();
-    }
-
     /**
      * Return an instance of the table indicated in the settings
-     * <li> In case that the table exists, return an instance of the table for use it later</li>
-     * <li>In case that the table doesn't exist, create a new table with the data provided and return an instance</li>
-     * <li>In both cases,takes into account the way of the table to perfom some operations or others</li>
+     *
+     * <li> In case that the table exists, return an instance of the table </li>
+     * <li> In case that the table doesn't exist, create a new table with the data provided and return an instance </li>
+     * <li> In both cases,takes into account the way of the table to perfom some operations or others </li>
      * <ul>
-     *     <li> If the mode is CREATE:</li>
+     *     <li> If the mode is CREATE: </li>
      *     <ul>
      *         <li> If the table exists -> return error (Can not create table that already exists)</li>
      *         <li> If the table doesn't exist and  the list of column names has not been provided-> return error </li>
      *         <li> If the table doesn't exist and  the list of column names has been provided->create a new table with data provided and return an instance  </li>
      *    </ul>
-     *    <li>If the mode is APPEND:</li>
+     *    <li> If the mode is APPEND: </li>
      *    <ul>
-     *        <li> If the table exists-> return the instance in the table</li>
-     *        <li> If the table doesn't exist -> return error</li>
+     *        <li> If the table exists-> return the instance in the table </li>
+     *        <li> If the table doesn't exist -> return error </li>
      *    </ul>
-     *    <li> If the mode is OVERRIDE </li>
+     *    <li> If the mode is OVERRIDE: </li>
      *    <ul>
-     *        <li>If the table exist-> delete all rows of this table and return an instance of it</li>
-     *        <li>If the table doesn't exist-< return error</li>
+     *        <li> If the table exist-> delete all rows of this table and return an instance of it </li>
+     *        <li> If the table doesn't exist-< return error </li>
      *
      *     </ul>
      * </ul>
      *
-     *
      * @param tableName     Table name to use
-     * @param fieldsNames   List name columns of the table(to create table)
-     * @param row           List of values to insert a row in the table( to know the types of columns)
-     * @param tableMode     Operations mode for operate with the table(CREATE,APPEND,OVERRIDE)
+     * @param fieldsNames   List of names of columns of the table (to create table)
+     * @param row           List of values to insert a row in the table (to know the types of columns)
+     * @param tableMode     Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
      * @return              Instance of the table indicated
-     * @throws KuduException
+     * @throws Exception    In case of wrong parameters or wrong combination (for example, APPEND mode to a non-existent table)
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, Row row, String tableMode) throws KuduException  {
-        KuduTable table = null;
+    public KuduTable useTable(String tableName, String [] fieldsNames, Row row, String tableMode) throws Exception {
+        KuduTable table;
 
         switch(tableMode){
             case "CREATE":
                 System.out.println("Modo CREATE");
                 if (client.tableExists(tableName)){
                     logger.error("ERROR: The table already exists.");
-                    System.exit(-1);
+                    throw new Exception("ERROR: The table already exists.");
                 } else{
-                    if(fieldsNames == null || fieldsNames[0].isEmpty()){
-                        //Not to be given because the parametres "fields" and "primary" with the mode "CREATE"
-                        logger.error("ERROR: Incorrect parameters, please check the constructor method. Missing \"fields\" parameter.");
-                        System.exit(-1);
+                    if (tableName == null || tableName.equals("")){
+                      throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
+
+                    } else if(fieldsNames == null || fieldsNames[0].isEmpty()){
+                        throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"fields\" parameter.");
+
+                    } else if (row == null){
+                        throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
+
                     } else {
                         table = createTable(tableName, fieldsNames, row);
                     }
                 }
-
                 break;
 
             case "APPEND":
@@ -115,8 +99,7 @@ public class Utils {
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
                     table = client.openTable(tableName);
                 } else{
-                    logger.error("ERROR: The table doesn't exist, so can't do APPEND operation");
-                    System.exit(-1);
+                    throw new Exception("ERROR: The table doesn't exist, so can't do APPEND operation");
                 }
                 break;
 
@@ -127,11 +110,44 @@ public class Utils {
                     clearTable(tableName);
                     table = client.openTable(tableName);
                 } else{
-                    logger.error("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
-                    System.exit(-1);
+                    throw new Exception("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                 }
-
                 break;
+            default:
+                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableMode\" parameter.");
+        }
+        return table;
+    }
+
+    /**
+     * Returns an instance of the table requested in parameters
+     * <li> If the table exists, returns an instance of the table </li>
+     * <li> If the table doesn't exist, creates a new table with the data provided and returns an instance </li>
+     *
+     * @param tableName     Table name to use
+     * @param fieldsNames   List of names of columns of the table (to create table)
+     * @param row           List of values to insert a row in the table (to know the types of columns)
+     * @return              Instance of the table indicated
+     * @throws Exception    In case of wrong parameters
+     */
+    public KuduTable useTable(String tableName, String [] fieldsNames, Row row) throws Exception {
+        KuduTable table;
+
+        if (client.tableExists(tableName)){
+            table = client.openTable(tableName);
+        } else {
+            if (tableName == null || tableName.equals("")) {
+                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
+
+            } else if (fieldsNames == null || fieldsNames[0].isEmpty()) {
+                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Missing \"fields\" parameter.");
+
+            } else if (row == null){
+                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
+
+            } else {
+                table = createTable(tableName, fieldsNames, row);
+            }
         }
         return table;
     }
@@ -318,7 +334,7 @@ public class Utils {
             deletes.add(d);
         }
         for(Delete d : deletes){
-            deleteFromTable(d);
+            session.apply(d);
         }
         logger.info("SUCCESS: The table has been emptied successfully");
     }
@@ -329,7 +345,7 @@ public class Utils {
      * @param table table instance
      * @return      List of column names in the table indicated in the parameter
      */
-    public String [] getNamesOfColumns(KuduTable table){
+    public String [] getNamesOfColumns (KuduTable table){
         List<ColumnSchema> columns = table.getSchema().getColumns();
         List<String> columnsNames = new ArrayList<>(); //  List of column names
         for (ColumnSchema schema : columns) {
@@ -340,24 +356,29 @@ public class Utils {
         return array;
     }
 
-    /**
-     * Insert in a Kudu table the data provided
-     *
-     * @param insert  Object insert that contains the data to insert into the table
-     * @throws KuduException
-     */
-    public void insertToTable(Insert insert) throws KuduException {
-        session.apply(insert);
-    }
+    public void insert (KuduTable table, Row row, String [] fieldsNames) throws KuduException {
 
-    /**
-     * Erase from a table tha data provided
-     *
-     * @param delete    Delete object containing the data to be deleted from the table
-     * @throws KuduException
-     */
-    public void deleteFromTable(Delete delete) throws KuduException {
-        session.apply(delete);
+        Insert insert = table.newInsert();
+
+        for (int index = 0; index < row.productArity(); index++){
+
+            //Create the insert with the previous data in function of the type ,a different "add"
+            switch(getRowsPositionType(index, row).getName()){
+                case "string":
+                    insert.getRow().addString(fieldsNames[index], (String)(row.productElement(index)));
+                    break;
+                case "int32":
+                    insert.getRow().addInt(fieldsNames[index], (Integer) row.productElement(index));
+                    break;
+                case "bool":
+                    insert.getRow().addBoolean(fieldsNames[index], (Boolean) row.productElement(index));
+                    break;
+                default:
+                    break;
+            }
+        }
+        //When the Insert is complete, write it in the table
+        session.apply(insert);
     }
 
     /**
