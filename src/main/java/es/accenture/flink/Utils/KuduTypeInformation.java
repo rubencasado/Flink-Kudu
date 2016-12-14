@@ -11,10 +11,16 @@ public class KuduTypeInformation extends TypeInformation{
 
     private int arity;
     private Class c;
+    private RowSerializable row;
+    private TypeInformation[] fieldTypes;
 
     public KuduTypeInformation(RowSerializable r) {
         this.arity = r.productArity();
         this.c = r.getClass();
+        this.row = r;
+        for(int i=0;i<this.arity;i++){
+            r.productElement(i).getClass();
+        }
     }
 
     @Override
@@ -48,8 +54,18 @@ public class KuduTypeInformation extends TypeInformation{
     }
 
     @Override
-    public TypeSerializer createSerializer(ExecutionConfig executionConfig) {
-        return null;
+    public TypeSerializer<RowSerializable> createSerializer(ExecutionConfig executionConfig) {
+        if (this.arity > 0) {
+            // create serializer for kudu with schema
+
+            TypeSerializer[] fieldSers;
+            fieldSers = new TypeSerializer[this.arity];
+            for (int i=0; i<this.arity; i++) {
+                fieldSers[i] = this.createSerializer(executionConfig);
+            }
+            return new KuduSerializer(fieldSers);
+        } else
+            return null;
     }
 
     @Override
@@ -59,6 +75,7 @@ public class KuduTypeInformation extends TypeInformation{
 
     @Override
     public boolean equals(Object o) {
+
         return false;
     }
 
@@ -69,6 +86,6 @@ public class KuduTypeInformation extends TypeInformation{
 
     @Override
     public boolean canEqual(Object o) {
-        return false;
+        return o.getClass()==RowSerializable.class;
     }
 }
