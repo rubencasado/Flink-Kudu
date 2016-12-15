@@ -9,6 +9,7 @@ import es.accenture.flink.Utils.RowSerializable;
 
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
+import org.apache.flink.api.table.typeutils.RowSerializer;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
@@ -130,6 +131,10 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void configure(Configuration parameters) {
+    }
+
+
+    public void openTable (String TABLE_NAME) throws Exception {
         LOG.info("Initializing KUDUConfiguration");
         try {
             if (client.tableExists(TABLE_NAME)) {
