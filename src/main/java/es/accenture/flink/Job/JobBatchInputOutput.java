@@ -1,6 +1,7 @@
 package es.accenture.flink.Job;
 
-import es.accenture.flink.Sink.KuduSinkFunction;
+import es.accenture.flink.Sink.KuduOutputFormat;
+import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.KuduTypeInformation;
@@ -27,9 +28,8 @@ public class JobBatchInputOutput {
     public static void main(String[] args) throws Exception {
 
         KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
-        KuduInputSplit a = null;
         prueba.configure(new Configuration());
-        prueba.open(a);
+        prueba.open(null);
 
         String [] columnNames = new String[3];
         columnNames[0] = "key";

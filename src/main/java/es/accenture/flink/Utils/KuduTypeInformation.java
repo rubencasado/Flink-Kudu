@@ -18,6 +18,7 @@ public class KuduTypeInformation extends TypeInformation{
         this.arity = r.productArity();
         this.c = r.getClass();
         this.row = r;
+        this.fieldTypes = new TypeInformation[r.productArity()];
         for(int i=0;i<this.arity;i++){
             r.productElement(i).getClass();
         }
@@ -57,11 +58,11 @@ public class KuduTypeInformation extends TypeInformation{
     public TypeSerializer<RowSerializable> createSerializer(ExecutionConfig executionConfig) {
         if (this.arity > 0) {
             // create serializer for kudu with schema
-
             TypeSerializer[] fieldSers;
             fieldSers = new TypeSerializer[this.arity];
             for (int i=0; i<this.arity; i++) {
-                fieldSers[i] = this.createSerializer(executionConfig);
+                System.out.println(i);
+                fieldSers[i] = this.fieldTypes[i].createSerializer(executionConfig);
             }
             return new KuduSerializer(fieldSers);
         } else
