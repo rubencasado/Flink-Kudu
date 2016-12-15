@@ -7,8 +7,8 @@ import java.io.Serializable;
 /**
  * Created by luis on 13/12/16.
  */
-public class RowSerializable extends Row implements Serializable {
-
+public class RowSerializable implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Object[] fields2;
 
     /**
@@ -16,8 +16,11 @@ public class RowSerializable extends Row implements Serializable {
      * @param arity
      */
     public RowSerializable(int arity){
-        super(arity);
+
         this.fields2 = new Object[arity];
+    }
+    public RowSerializable(){
+
     }
 
     /**

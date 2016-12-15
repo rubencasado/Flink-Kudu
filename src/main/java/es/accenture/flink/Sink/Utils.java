@@ -1,5 +1,6 @@
 package es.accenture.flink.Sink;
 
+import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.table.Row;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnSchema.ColumnSchemaBuilder;
@@ -68,7 +69,7 @@ public class Utils {
      * @return              Instance of the table indicated
      * @throws Exception    In case of wrong parameters or wrong combination (for example, APPEND mode to a non-existent table)
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, Row row, String tableMode) throws Exception {
+    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row, String tableMode) throws Exception {
         KuduTable table;
 
         switch(tableMode){
@@ -130,7 +131,7 @@ public class Utils {
      * @return              Instance of the table indicated
      * @throws Exception    In case of wrong parameters
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, Row row) throws Exception {
+    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row) throws Exception {
         KuduTable table;
 
         if (client.tableExists(tableName)){
@@ -161,7 +162,7 @@ public class Utils {
      * @return              instance of the table indicated
      * @throws KuduException
      */
-    public KuduTable createTable (String tableName, String [] fieldsNames, Row row) throws KuduException{
+    public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException{
         KuduTable table = null;
         List<ColumnSchema> columns = new ArrayList<ColumnSchema>();
         List<String> rangeKeys = new ArrayList<String>(); // Primary key
@@ -215,7 +216,7 @@ public class Utils {
      * @param row   list of values to insert a row in the table
      * @return      element type "pos"-esimo of "row"
      */
-    public Type getRowsPositionType (int pos, Row row){
+    public Type getRowsPositionType (int pos, RowSerializable row){
         Type colType = null;
         switch(row.productElement(pos).getClass().getName()){
             case "java.lang.String":
@@ -240,20 +241,20 @@ public class Utils {
      * @return          List of rows in the table(object Row)
      * @throws KuduException
      */
-    public List<Row> readTable (String tableName) throws KuduException {
+    public List<RowSerializable> readTable (String tableName) throws KuduException {
 
         KuduTable table = client.openTable(tableName);
         KuduScanner scanner = client.newScannerBuilder(table).build();
         //Obtain the column name list
         String[] columnsNames = getNamesOfColumns(table);
         //The list return all rows
-        List<Row> rowsList = new ArrayList<>();
+        List<RowSerializable> rowsList = new ArrayList<>();
         String content = "The table contains:";
 
         int number = 1, posRow = 0;
         while (scanner.hasMoreRows()) {
             for (RowResult row : scanner.nextRows()) { //Get the rows
-                Row rowToInsert = new Row(columnsNames.length);
+                RowSerializable rowToInsert = new RowSerializable(columnsNames.length);
                 content += "\nRow " + number + ": \n";
                 for (String col : columnsNames) { //For each column, it's type determined and this is how to read it
 
@@ -293,7 +294,7 @@ public class Utils {
      * @param row   row to show
      * @return      a string containing the data of the row indicated in the parameter
      */
-    public String printRow (Row row){
+    public String printRow (RowSerializable row){
         String res = "";
         for(int i = 0; i< row.productArity(); i++){
             res += (row.productElement(i) + " | ");
@@ -309,11 +310,11 @@ public class Utils {
      */
     public void clearTable (String tableName) throws KuduException {
         KuduTable table = client.openTable(tableName);
-        List<Row> rowsList = readTable(tableName);
+        List<RowSerializable> rowsList = readTable(tableName);
 
         String primaryKey = table.getSchema().getPrimaryKeyColumns().get(0).getName();
         List<Delete> deletes = new ArrayList<>();
-        for(Row row : rowsList){
+        for(RowSerializable row : rowsList){
             Delete d = table.newDelete();
             switch(getRowsPositionType(0, row).getName()){
                 case "string":
@@ -356,7 +357,7 @@ public class Utils {
         return array;
     }
 
-    public void insert (KuduTable table, Row row, String [] fieldsNames) throws KuduException {
+    public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException {
 
         Insert insert = table.newInsert();
 

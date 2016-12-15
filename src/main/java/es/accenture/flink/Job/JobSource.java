@@ -5,8 +5,11 @@ import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.KuduTypeInformation;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.typeutils.TypeInfoParser;
 import org.apache.flink.configuration.Configuration;
 
 /**
@@ -27,8 +30,10 @@ public class JobSource {
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        KuduTypeInformation typeInformation = new KuduTypeInformation(prueba.getRows().get(0));
-        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
+        //KuduTypeInformation typeInformation = new KuduTypeInformation(prueba.getRows().get(0));
+        TypeInformation<RowSerializable> typeInformation2 = TypeInformation.of(new TypeHint<RowSerializable>() { });
+        TypeInformation<RowSerializable> typeInformation3 = TypeInformation.of(RowSerializable.class);
+        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation2);
 
         source.map(new MapFunction<RowSerializable, String>() {
 

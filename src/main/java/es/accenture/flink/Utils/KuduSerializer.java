@@ -79,7 +79,7 @@ public class KuduSerializer extends TypeSerializer<RowSerializable> {
           throw new RuntimeException("rowSerializable's arity does not match this KuduSerializer ");
         }
 
-        NullMaskUtils.writeNullMask(len, row, dataOutputView);
+        //NullMaskUtils.writeNullMask(len, row, dataOutputView);
 
         Object field;
         for(int i=0; i<len; i++){
