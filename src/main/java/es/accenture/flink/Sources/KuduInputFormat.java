@@ -13,7 +13,12 @@ import org.apache.flink.api.table.typeutils.RowSerializer;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
+import org.apache.kudu.ColumnSchema;
+import org.apache.kudu.Common;
+import org.apache.kudu.Schema;
 import org.apache.kudu.client.*;
+import org.apache.kudu.client.shaded.com.google.common.base.Splitter;
+import org.apache.kudu.client.shaded.com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -39,6 +44,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     private static final Logger LOG = Logger.getLogger(KuduInputFormat.class);
 
+    List<String> projectColumns;
+    //List<KuduPredicate> predicates;
 
     /**
      * Constructor of class KuduInputFormat
@@ -131,14 +138,22 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void configure(Configuration parameters) {
-    }
 
+        //this.predicates = new ArrayList<>();
+    }
 
     public void openTable (String TABLE_NAME) throws Exception {
         LOG.info("Initializing KUDUConfiguration");
         try {
+
             if (client.tableExists(TABLE_NAME)) {
                 table = client.openTable(TABLE_NAME);
+
+                projectColumns = new ArrayList<>();
+                for(int i=0; i<table.getSchema().getColumnCount(); i++){
+                    projectColumns.add(this.table.getSchema().getColumnByIndex(i).getName());
+                }
+
             } else {
                 LOG.error("Table does not exist");
                 client.close();
@@ -165,6 +180,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             LOG.info("Session created");
 
             KuduInputSplit[] splits = createInputSplits(3);
+
             LOG.info(splits.length + " splits generated");
 
             endReached = false;
@@ -266,30 +282,34 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     public KuduInputSplit[] createInputSplits(final int minNumSplits) throws IOException {
 
         int cont = 0;
-
         try {
-            KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table);
+            KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table)
+                    .setProjectedColumnNames(projectColumns);
+
+            //for (KuduPredicate predicate : predicates) {
+            //    builder.addPredicate(predicate);
+            //}
+
             List<KuduScanToken> tokens = builder.build();
-            KuduInputSplit[] inputs = new KuduInputSplit[tokens.size()];
+            KuduInputSplit[] splits = new KuduInputSplit[tokens.size()];
 
             String[] hostName = new String[] {KUDU_MASTER};
 
             for (KuduScanToken token : tokens){
+                List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
+                for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
+                    locations.add(hostName[0]);
+                }
 
-                KuduInputSplit inputSplit = new KuduInputSplit(cont,hostName,this.table.getName().getBytes());
-
-                inputs[cont] = inputSplit;
+                splits[cont] = new KuduInputSplit(token, locations.toArray(new String[locations.size()]));
                 cont++;
                 LOG.debug("Counter:" + cont);
             }
+            return splits;
 
-            return inputs;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new IOException(e);
         }
-
-        return null;
     }
 /*
     private void logSplitInfo(String action, LocatableInputSplit split) {
