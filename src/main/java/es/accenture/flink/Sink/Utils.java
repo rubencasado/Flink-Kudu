@@ -376,7 +376,12 @@ public class Utils {
 
     public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException {
 
-        Insert insert = table.newInsert();
+        Insert insert;
+        try{
+            insert = table.newInsert();
+        } catch (NullPointerException e){
+            throw new NullPointerException("Error encountered at opening/creating table");
+        }
 
         for (int index = 0; index < row.productArity(); index++){
 
