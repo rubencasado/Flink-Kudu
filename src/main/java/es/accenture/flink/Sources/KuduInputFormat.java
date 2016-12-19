@@ -176,6 +176,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         LOG.info("Opening split");
         try {
             table = client.openTable(TABLE_NAME);
+
             //KuduSession session = client.newSession();
             LOG.info("Session created");
 
@@ -190,7 +191,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             this.results = scanner.nextRows();
             this.generateRows();
         } catch (IOException e) {
-            LOG.error("Could not open Kudu Table named: " + TABLE_NAME, e);
+            LOG.error("Could not open Kudu Table named: " + TABLE_NAME);
+            throw new IOException("The table doesn't exist");
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }

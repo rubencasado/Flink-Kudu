@@ -1,13 +1,11 @@
 package es.accenture.flink.Sink;
 
 import es.accenture.flink.Utils.RowSerializable;
-import org.apache.flink.api.table.Row;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnSchema.ColumnSchemaBuilder;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.*;
-import org.apache.kudu.client.KuduClient.KuduClientBuilder;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -74,10 +72,10 @@ public class Utils {
 
         switch(tableMode){
             case "CREATE":
-                System.out.println("Modo CREATE");
+                logger.info("Modo CREATE");
                 if (client.tableExists(tableName)){
                     logger.error("ERROR: The table already exists.");
-                    throw new Exception("ERROR: The table already exists.");
+                    throw new Exception("ERROR: TableMode not valid (can't do CREATE when the table already exists).");
                 } else{
                     if (tableName == null || tableName.equals("")){
                       throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
@@ -95,22 +93,24 @@ public class Utils {
                 break;
 
             case "APPEND":
-                System.out.println("Modo APPEND");
+                logger.info("Modo APPEND");
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
                     table = client.openTable(tableName);
                 } else{
+                    logger.error("ERROR: The table doesn't exist");
                     throw new Exception("ERROR: The table doesn't exist, so can't do APPEND operation");
                 }
                 break;
 
             case "OVERRIDE":
-                System.out.println("Modo OVERRIDE");
+                logger.info("Modo OVERRIDE");
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
                     clearTable(tableName);
                     table = client.openTable(tableName);
                 } else{
+                    logger.error("ERROR: The table doesn't exist");
                     throw new Exception("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                 }
                 break;
@@ -135,6 +135,7 @@ public class Utils {
         KuduTable table;
 
         if (client.tableExists(tableName)){
+            logger.info("The table exists");
             table = client.openTable(tableName);
         } else {
             if (tableName == null || tableName.equals("")) {
@@ -147,6 +148,7 @@ public class Utils {
                 throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
 
             } else {
+                logger.info("The table doesn't exist");
                 table = createTable(tableName, fieldsNames, row);
             }
         }
@@ -162,7 +164,7 @@ public class Utils {
      * @return              instance of the table indicated
      * @throws KuduException
      */
-    public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException{
+    public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException {
         KuduTable table = null;
         List<ColumnSchema> columns = new ArrayList<ColumnSchema>();
         List<String> rangeKeys = new ArrayList<String>(); // Primary key
@@ -284,7 +286,7 @@ public class Utils {
                 posRow = 0;
             }
         }
-        logger.info(content);
+//        logger.info(content);
         return rowsList;
     }
 
@@ -355,6 +357,21 @@ public class Utils {
         String [] array = new String[columnsNames.size()];
         array = columnsNames.toArray(array);
         return array;
+    }
+
+    public boolean checkNamesOfColumns(String [] tableNames, String [] providedNames) throws Exception{
+        boolean res = false;
+        if(tableNames.length != providedNames.length){
+            res = false;
+        } else{
+            for (int i = 0; i < tableNames.length; i++) {
+                res = tableNames[i].equals(providedNames[i]) ? true : false;
+            }
+        }
+        if(!res){
+            throw new Exception("ERROR: The table column names and the provided column names don't match");
+        }
+        return res;
     }
 
     public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException {

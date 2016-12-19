@@ -61,6 +61,14 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
 
         if(fieldsNames == null){
             fieldsNames = utils.getNamesOfColumns(table);
+        } else {
+            // When column names provided, and table exists, must check if column names match
+            try {
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            } catch (Exception e){
+                logger.error(e.getMessage());
+                System.exit(1);
+            }
         }
 
         // Make the insert into the table
