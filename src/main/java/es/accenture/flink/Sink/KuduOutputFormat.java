@@ -34,8 +34,8 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      */
     public KuduOutputFormat(String host, String tableName, String [] fieldsNames, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            logger.error("ERROR: missing table mode parameter at the constructor method");
-            System.exit(-1);
+            logger.error("ERROR: table mode parameter not valid (must be CREATE, APPEND or OVERRIDE)");
+            System.exit(1);
         }
         this.host = host;
         this.tableName = tableName;
@@ -54,12 +54,12 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
     public KuduOutputFormat(String host, String tableName, String tableMode) throws KuduException {
         if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            logger.error("ERROR: missing table mode parameter at the constructor method");
-            System.exit(-1);
+            logger.error("ERROR: table mode parameter not valid (must be CREATE, APPEND or OVERRIDE)");
+            System.exit(1);
         }
         if(tableMode.equals("CREATE")){
             logger.error("ERROR: missing fields parameter at the constructor method");
-            System.exit(-1);
+            System.exit(1);
         }
         this.host = host;
         this.tableName = tableName;
@@ -94,12 +94,21 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         try {
             this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
+            System.exit(1);
         }
 
-        //Case APPEND(or OVERRIDE), with builder without column names , because otherwise it throws a NullPointerException
+        // Case APPEND(or OVERRIDE), with builder without column names , because otherwise it throws a NullPointerException
         if(fieldsNames == null){
             fieldsNames = utils.getNamesOfColumns(table);
+        } else {
+            // When column names provided, and table exists, must check if column names match
+            try {
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            } catch (Exception e){
+                logger.error(e.getMessage());
+                System.exit(1);
+            }
         }
 
         // Make the insert into the table

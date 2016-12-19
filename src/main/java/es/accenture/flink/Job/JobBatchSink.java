@@ -24,7 +24,7 @@ public class JobBatchSink {
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        DataSet<String> input = env.fromElements("fila100 value100 description1000");
+        DataSet<String> input = env.fromElements("fila100 value100 description100");
 
         DataSet<RowSerializable> out = input.map(new MapFunction<String, RowSerializable>() {
             @Override

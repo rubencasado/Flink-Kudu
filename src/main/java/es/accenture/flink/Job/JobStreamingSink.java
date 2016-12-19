@@ -1,14 +1,18 @@
 package es.accenture.flink.Job;
 
+import es.accenture.flink.Sink.KuduOutputFormat;
+import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.RowSerializable;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.java.DataSet;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
 
 /**
  * Created by dani on 14/12/16.
@@ -17,22 +21,29 @@ public class JobStreamingSink {
 
     public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     public static final String TABLE_NAME = System.getProperty("tableName", "sample");
+    // LOG4J
+    final static Logger logger = Logger.getLogger(JobStreamingSink.class);
 
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
+        KuduInputFormat prueba = new KuduInputFormat("sample", "localhost");
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
-        prueba.open(a);
+        try{
+            prueba.open(a);
+        } catch (IOException e){
+            logger.error(e.getMessage());
+            System.exit(1);
+        }
 
         String [] columnNames = new String[3];
         columnNames[0] = "key";
         columnNames[1] = "value";
-        columnNames[2] = "descripcion";
+        columnNames[2] = "description";
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        DataStream<String> stream = env.fromElements("fila100 value100 descripcion1000");
+        DataStream<String> stream = env.fromElements("field1 field2 field3");
 
         DataStream<RowSerializable> stream2 = stream.map(new MapFunction<String, RowSerializable>() {
             @Override
@@ -47,7 +58,7 @@ public class JobStreamingSink {
             }
         });
 
-        //stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames)));
+        stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames));
 
         env.execute();
     }
