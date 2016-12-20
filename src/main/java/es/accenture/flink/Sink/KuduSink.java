@@ -18,7 +18,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
     private transient KuduTable table;
 
     // LOG4J
-    final static Logger logger = Logger.getLogger(KuduOutputFormat.class);
+    final static Logger logger = Logger.getLogger(KuduSink.class);
 
     /**
      * Builder to use when you want to create a new table
