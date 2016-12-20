@@ -1,6 +1,5 @@
 package es.accenture.flink.Job;
 
-import es.accenture.flink.Sink.KuduOutputFormat;
 import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Sources.KuduInputSplit;
@@ -19,14 +18,15 @@ import java.io.IOException;
  */
 public class JobStreamingSink {
 
-    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.getProperty("tableName", "sample");
+    private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     // LOG4J
     final static Logger logger = Logger.getLogger(JobStreamingSink.class);
 
+    // Args[0] = sample
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("sample", "localhost");
+        String tableName = args[0];
+        KuduInputFormat prueba = new KuduInputFormat(tableName, KUDU_MASTER);
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
         try{
@@ -58,7 +58,7 @@ public class JobStreamingSink {
             }
         });
 
-        stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames));
+        stream2.addSink(new KuduSink(KUDU_MASTER, tableName, columnNames));
 
         env.execute();
     }
