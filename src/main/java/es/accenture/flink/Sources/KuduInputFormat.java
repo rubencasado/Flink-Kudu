@@ -182,6 +182,15 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
+<<<<<<< HEAD
+=======
+        LOG.info("Opening split");
+        try {
+            table = client.openTable(TABLE_NAME);
+
+            //KuduSession session = client.newSession();
+            LOG.info("Session created");
+>>>>>>> ruben/master
 
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
@@ -211,6 +220,12 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
         try{
             this.generateRows();
+<<<<<<< HEAD
+=======
+        } catch (IOException e) {
+            LOG.error("Could not open Kudu Table named: " + TABLE_NAME);
+            throw new IOException("The table doesn't exist");
+>>>>>>> ruben/master
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
