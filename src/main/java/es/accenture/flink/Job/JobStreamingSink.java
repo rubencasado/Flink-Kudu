@@ -18,15 +18,17 @@ import java.io.IOException;
  */
 public class JobStreamingSink {
 
-    private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
     // LOG4J
     final static Logger logger = Logger.getLogger(JobStreamingSink.class);
 
     // Args[0] = sample
+    // Args[1] = localhost
     public static void main(String[] args) throws Exception {
 
         String tableName = args[0];
-        KuduInputFormat prueba = new KuduInputFormat(tableName, KUDU_MASTER);
+        String host = args[1];
+
+        KuduInputFormat prueba = new KuduInputFormat(tableName, host);
         KuduInputSplit a = null;
         prueba.configure(new Configuration());
         try{
@@ -58,7 +60,7 @@ public class JobStreamingSink {
             }
         });
 
-        stream2.addSink(new KuduSink(KUDU_MASTER, tableName, columnNames));
+        stream2.addSink(new KuduSink(host, tableName, columnNames));
 
         env.execute();
     }

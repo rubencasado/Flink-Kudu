@@ -12,14 +12,15 @@ import org.apache.flink.api.java.ExecutionEnvironment;
  */
 public class JobBatchSink {
 
-    private static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-
     // Args[0] = mytable
     // Args[1] = CREATE
+    // Args[2] = localhost
     public static void main(String[] args) throws Exception {
 
         String tableName = args[0];
         String tableMode = args[1];
+        String host = args[2];
+
         String [] columnNames = new String[3];
         columnNames[0] = "key";
         columnNames[1] = "value";
@@ -42,7 +43,7 @@ public class JobBatchSink {
             }
         });
 
-        out.output(new KuduOutputFormat(KUDU_MASTER, tableName, columnNames, tableMode));
+        out.output(new KuduOutputFormat(host, tableName, columnNames, tableMode));
 
         env.execute();
 
