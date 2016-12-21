@@ -29,8 +29,11 @@ public class Utils {
      * @throws KuduException
      */
 
-    public Utils(String host) throws KuduException {
+    public Utils(String host) throws Exception {
         this.client = new KuduClient.KuduClientBuilder(host).build();
+        if(client == null){
+            throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+        }
         this.session = this.client.newSession();
     }
 
@@ -73,6 +76,11 @@ public class Utils {
         switch(tableMode){
             case "CREATE":
                 logger.info("Modo CREATE");
+                try{
+                    client.tableExists(tableName);
+                } catch (Exception e){
+                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                }
                 if (client.tableExists(tableName)){
                     logger.error("ERROR: The table already exists.");
                     throw new Exception("ERROR: TableMode not valid (can't do CREATE when the table already exists).");
@@ -94,6 +102,11 @@ public class Utils {
 
             case "APPEND":
                 logger.info("Modo APPEND");
+                try{
+                    client.tableExists(tableName);
+                } catch (Exception e){
+                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                }
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
                     table = client.openTable(tableName);
@@ -105,6 +118,11 @@ public class Utils {
 
             case "OVERRIDE":
                 logger.info("Modo OVERRIDE");
+                try{
+                    client.tableExists(tableName);
+                } catch (Exception e){
+                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                }
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
                     clearTable(tableName);
@@ -374,7 +392,7 @@ public class Utils {
         return res;
     }
 
-    public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException {
+    public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException, NullPointerException {
 
         Insert insert;
         try{
