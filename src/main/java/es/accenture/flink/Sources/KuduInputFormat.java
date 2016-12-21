@@ -13,6 +13,7 @@ import org.apache.flink.api.table.typeutils.RowSerializer;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
+import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Common;
 import org.apache.kudu.Schema;
@@ -139,15 +140,26 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     @Override
     public void configure(Configuration parameters) {
 
-        //this.predicates = new ArrayList<>();
+        LOG.info("Initializing KUDU Configuration...");
+
+        table = createTable(TABLE_NAME);
+        if (table != null) {
+            scanner = client.newScannerBuilder(table)
+                    .setProjectedColumnNames(projectColumns)
+                    .build();
+        }
     }
 
-    public void openTable (String TABLE_NAME) throws Exception {
-        LOG.info("Initializing KUDUConfiguration");
-        try {
+    /**
+     * Create an {@link KuduTable} instance and set it into this format
+     */
 
+    public KuduTable createTable (String TABLE_NAME) {
+
+        try {
             if (client.tableExists(TABLE_NAME)) {
                 table = client.openTable(TABLE_NAME);
+                //KuduSession session = client.newSession();
 
                 projectColumns = new ArrayList<>();
                 for(int i=0; i<table.getSchema().getColumnCount(); i++){
@@ -157,14 +169,11 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             } else {
                 LOG.error("Table does not exist");
                 client.close();
-                return;
             }
         }catch (Exception e){
             throw new RuntimeException("Could not obtain table");
         }
-        if (table != null) {
-            scanner = getScanner();
-        }
+        return table;
     }
 
     /**
@@ -173,29 +182,57 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
+<<<<<<< HEAD
+=======
         LOG.info("Opening split");
         try {
             table = client.openTable(TABLE_NAME);
 
             //KuduSession session = client.newSession();
             LOG.info("Session created");
+>>>>>>> ruben/master
 
-            KuduInputSplit[] splits = createInputSplits(3);
+        if (table == null) {
+            throw new IOException("The Kudu table has not been opened!");
+        }
+        if (split == null) {
+            throw new IOException("Input split is null!");
+        }
 
-            LOG.info(splits.length + " splits generated");
+        LOG.info("Opening split...");
 
-            endReached = false;
-            scannedRows = 0;
+        //table = client.openTable(TABLE_NAME);
+        //KuduSession session = client.newSession();
+        //LOG.info("Session created");
 
-            this.scanner = client.newScannerBuilder(table).build();
-            this.results = scanner.nextRows();
+        //KuduInputSplit[] splits = createInputSplits(3);
+
+        //LOG.info(splits.length + " splits generated");
+
+        split.getStartKey();
+        split.getEndKey();
+
+        endReached = false;
+        scannedRows = 0;
+
+        //scanner = client.newScannerBuilder(table).build();
+        results = scanner.nextRows();
+
+        try{
             this.generateRows();
+<<<<<<< HEAD
+=======
         } catch (IOException e) {
             LOG.error("Could not open Kudu Table named: " + TABLE_NAME);
             throw new IOException("The table doesn't exist");
+>>>>>>> ruben/master
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        //catch (IOException e) {
+        //  LOG.error("Could not open Kudu Table named: " + TABLE_NAME, e);
+        //}
+
     }
 
     /**
@@ -236,6 +273,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      */
     @Override
     public RowSerializable nextRecord(RowSerializable reuse) throws IOException {
+
         if (scanner == null) {
             throw new IOException("No table scanner provided!");
         }
@@ -281,37 +319,30 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @return inputs; The splits of this input that can be processed in parallel.
      */
     @Override
-    public KuduInputSplit[] createInputSplits(final int minNumSplits) throws IOException {
+    public KuduInputSplit[] createInputSplits(final int minNumSplits) {
 
-        int cont = 0;
-        try {
-            KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table)
-                    .setProjectedColumnNames(projectColumns);
+        KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(table)
+                .setProjectedColumnNames(projectColumns);
 
-            //for (KuduPredicate predicate : predicates) {
-            //    builder.addPredicate(predicate);
-            //}
+        List<KuduScanToken> tokens = builder.build();
+        List<KuduInputSplit> splits = new ArrayList<>(minNumSplits);
 
-            List<KuduScanToken> tokens = builder.build();
-            KuduInputSplit[] splits = new KuduInputSplit[tokens.size()];
+        for (KuduScanToken token : tokens){
 
-            String[] hostName = new String[] {KUDU_MASTER};
+            byte[] startKey = token.getTablet().getPartition().getPartitionKeyStart();
+            byte[] endKey = token.getTablet().getPartition().getPartitionKeyEnd();
 
-            for (KuduScanToken token : tokens){
-                List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
-                for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
-                    locations.add(hostName[0]);
-                }
-
-                splits[cont] = new KuduInputSplit(token, locations.toArray(new String[locations.size()]));
-                cont++;
-                LOG.debug("Counter:" + cont);
+            List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
+            for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
+                locations.add(replica.getRpcHost().concat(replica.getRpcPort().toString()));
             }
-            return splits;
-
-        } catch (IOException e) {
-            throw new IOException(e);
+            int numSplit = splits.size();
+            KuduInputSplit split = new KuduInputSplit(numSplit, (locations.toArray(new String[locations.size()])),
+                    TABLE_NAME, startKey, endKey);
+            splits.add(split);
         }
+        LOG.info("Created: " + splits.size() + " splits");
+        return splits.toArray(new KuduInputSplit[0]);
     }
 /*
     private void logSplitInfo(String action, LocatableInputSplit split) {
@@ -343,12 +374,11 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @param endKey   End key of the region
      * @return true, if this region needs to be included as part of the input (default).
      */
-    protected boolean includeRegionInSplit(final byte[] startKey, final byte[] endKey) {
-        return true;
-    }
+    protected boolean includeRegionInSplit(final byte[] startKey, final byte[] endKey) { return true; }
 
     @Override
     public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
+        System.out.println("AAAA");
         return new InputSplitAssigner() {
             @Override
             public InputSplit getNextInputSplit(String s, int i) {
@@ -357,10 +387,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         };
     }
 
-
     @Override
-    public BaseStatistics getStatistics(BaseStatistics cachedStatistics) {
-        return null;
-    }
-
+    public BaseStatistics getStatistics(BaseStatistics cachedStatistics) { return null; }
 }
