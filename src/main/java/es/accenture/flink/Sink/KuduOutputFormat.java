@@ -88,15 +88,21 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @throws IOException
      */
     @Override
-    public void writeRecord(RowSerializable row) throws IOException {
-        this.utils = new Utils(host);
+    public void writeRecord(RowSerializable row) throws KuduException {
+
+        try{
+            this.utils = new Utils(host);
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            e.printStackTrace();
+        }
+
         //Look at the situation of the table (exist or not) depending of the mode, the table is created or opened
         try {
             this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
         } catch (Exception e) {
             logger.error(e.getMessage());
             e.printStackTrace();
-//            System.exit(1);
         }
 
         // Case APPEND(or OVERRIDE), with builder without column names , because otherwise it throws a NullPointerException
@@ -108,8 +114,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
                 utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
             } catch (Exception e){
                 logger.error(e.getMessage());
-//                e.printStackTrace();
-//                System.exit(1);
+                e.printStackTrace();
             }
         }
 

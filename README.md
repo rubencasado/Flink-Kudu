@@ -57,11 +57,11 @@ After that, the generated JAR will be located at "*Flink-Kudu / target / flink-k
 ```
 For example:
 ```
-/opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE
+/opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE localhost
 ```
 **List of available Jobs**
 - [ ] JobSource (**es.accenture.flink.Job.JobSource**): it takes the data from a table of Kudu and prints it on the screen (*Batch Mode*).
-- [x] JobBatchSink (**es.accenture.flink.Job.JobBatchSink**): it takes the data from a collection of elements and stores it in a table of Kudu (*Batch Mode*). Allows params an executing: *table_name* and *table_mode* (CREATE, APPEND or OVERRIDE).
-- [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): it takes the data from a collection of elements and stores it in a table of Kudu (*Streaming Mode*). Allows params an executing: *table_name*
+- [x] JobBatchSink (**es.accenture.flink.Job.JobBatchSink**): it takes the data from a collection of elements and stores it in a table of Kudu (*Batch Mode*). Allows params at executing: *table_name*, *table_mode* (CREATE, APPEND or OVERRIDE) and *host*.
+- [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): it takes the data from a collection of elements and stores it in a table of Kudu (*Streaming Mode*). Allows params at executing: *table_name* and *host*.
 - [ ] JobBatchInputOutput (**es.accenture.flink.Job.JobBatchInputOutput**): it takes the data from a table of Kudu, applies a minimal transformation and stores it in a table of Kudu (*Batch Mode*).
 - [ ] JobStreamingInputOutput (**es.accenture.flink.Job.JobStreamingInputOutput**): it takes the data from Kafka, applies a minimal transformation and stores it in a table of Kudu (*Streaming Mode*).
