@@ -46,7 +46,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     private static final Logger LOG = Logger.getLogger(KuduInputFormat.class);
 
     List<String> projectColumns;
-    //List<KuduPredicate> predicates;
 
     /**
      * Constructor of class KuduInputFormat
@@ -172,6 +171,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             }
         }catch (Exception e){
             throw new RuntimeException("Could not obtain table");
+
         }
         return table;
     }
@@ -182,15 +182,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
-<<<<<<< HEAD
-=======
-        LOG.info("Opening split");
-        try {
-            table = client.openTable(TABLE_NAME);
-
-            //KuduSession session = client.newSession();
-            LOG.info("Session created");
->>>>>>> ruben/master
 
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
@@ -220,12 +211,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
         try{
             this.generateRows();
-<<<<<<< HEAD
-=======
-        } catch (IOException e) {
-            LOG.error("Could not open Kudu Table named: " + TABLE_NAME);
-            throw new IOException("The table doesn't exist");
->>>>>>> ruben/master
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
