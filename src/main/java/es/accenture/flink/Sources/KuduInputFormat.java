@@ -8,6 +8,7 @@ package es.accenture.flink.Sources;
 import es.accenture.flink.Utils.RowSerializable;
 
 import org.apache.flink.api.common.io.InputFormat;
+import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.api.table.typeutils.RowSerializer;
 import org.apache.flink.configuration.Configuration;
@@ -53,6 +54,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @param IP Kudu-master server's IP direction
      */
     public KuduInputFormat(String tableName, String IP){
+        System.out.println("1. CONSTRUCTOR");
         KUDU_MASTER = System.getProperty("kuduMaster", IP);
         TABLE_NAME = System.getProperty("tableName", tableName);
 
@@ -135,7 +137,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void configure(Configuration parameters) {
-
+        System.out.println("2. CONFIGURE");
         LOG.info("Initializing KUDU Configuration...");
         this.client  = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
         table = createTable(TABLE_NAME);
@@ -160,12 +162,10 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
                 System.out.println("OPENTABLE");
                 table = client.openTable(TABLE_NAME);
                 //KuduSession session = client.newSession();
-                System.out.println("BBBBB");
                 projectColumns = new ArrayList<>();
                 for(int i=0; i<table.getSchema().getColumnCount(); i++){
                     projectColumns.add(this.table.getSchema().getColumnByIndex(i).getName());
                 }
-                System.out.println("AAAAA");
 
             } else {
                 LOG.error("Table does not exist");
@@ -184,7 +184,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
-
+        System.out.println("5. OPEN");
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
         }
@@ -195,20 +195,11 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         LOG.info("Opening split...");
 
         //table = client.openTable(TABLE_NAME);
-        //KuduSession session = client.newSession();
-        //LOG.info("Session created");
-
-        //KuduInputSplit[] splits = createInputSplits(3);
-
-        //LOG.info(splits.length + " splits generated");
-
-        split.getStartKey();
-        split.getEndKey();
 
         endReached = false;
         scannedRows = 0;
 
-        //scanner = client.newScannerBuilder(table).build();
+        scanner = client.newScannerBuilder(table).build();
         results = scanner.nextRows();
 
         try{
@@ -308,7 +299,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      */
     @Override
     public KuduInputSplit[] createInputSplits(final int minNumSplits) {
-
+        System.out.println("3. CREATE SPLITS");
         KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(table)
                 .setProjectedColumnNames(projectColumns);
 
@@ -366,13 +357,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
-        System.out.println("AAAA");
-        return new InputSplitAssigner() {
-            @Override
-            public InputSplit getNextInputSplit(String s, int i) {
-                return null;
-            }
-        };
+        System.out.println("4. ASSIGNER");
+        return new LocatableInputSplitAssigner(inputSplits);
     }
 
     @Override

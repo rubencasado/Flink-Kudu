@@ -1,21 +1,13 @@
 package es.accenture.flink.Sources;
 
 import org.apache.flink.core.io.InputSplit;
-import org.apache.hadoop.io.Writable;
-import org.apache.kudu.client.Bytes;
-import org.apache.kudu.client.KuduScanToken;
-import org.apache.flink.hadoop.shaded.com.google.common.base.Objects;
-import org.apache.kudu.client.shaded.com.google.common.primitives.UnsignedBytes;
+import org.apache.flink.core.io.LocatableInputSplit;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Created by lballestin on 28/11/16.
  */
-public class KuduInputSplit implements InputSplit {
+public class KuduInputSplit extends LocatableInputSplit implements InputSplit  {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,13 +31,15 @@ public class KuduInputSplit implements InputSplit {
      * @param startKey the start row of the split
      * @param endKey the end row of the split
      */
+
     KuduInputSplit(final int splitNumber, final String[] hostnames, final String tableName,
                    final byte[] startKey, final byte[] endKey) {
-
+        super(splitNumber, hostnames);
         this.tableName = tableName;
         this.startKey = startKey;
         this.endKey = endKey;
         this.splitNumber = splitNumber;
+
     }
 
     @Override
