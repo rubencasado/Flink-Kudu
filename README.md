@@ -20,14 +20,13 @@ Data flows patterns:
 
 ## Work in Progress
 ### Completed
-- [x] Github project's structure
-- [x] Sink implementation for Batch Processing and its Job.
-- [x] Sink implementation for Streaming Processing and its Job.
+- [x] Sink implementation for Batch Processing and example job.
+- [x] Sink implementation for Streaming Processing and example job.
 
 ### Working
-- [ ] Source implementation for Batch Processing and its Job.
+- [ ] Source implementation for Batch Processing and example job.
 - [ ] Unit Tests for main classes.
-- [ ] Kafka integration
+- [ ] Kafka integration in example job
 
 # Build library
 
