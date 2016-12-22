@@ -55,7 +55,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     public KuduInputFormat(String tableName, String IP){
         KUDU_MASTER = System.getProperty("kuduMaster", IP);
         TABLE_NAME = System.getProperty("tableName", tableName);
-        this.client  = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
+
     }
 
     /**
@@ -119,9 +119,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
                 case BINARY:
                     row.setField(i, rowResult.getBinary(i));
                     break;
-                case TIMESTAMP:
-                    row.setField(i, rowResult.getLong(i));
-                    break;
             }
         }
         return row;
@@ -140,7 +137,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     public void configure(Configuration parameters) {
 
         LOG.info("Initializing KUDU Configuration...");
-
+        this.client  = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
         table = createTable(TABLE_NAME);
         if (table != null) {
             scanner = client.newScannerBuilder(table)
@@ -156,14 +153,19 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     public KuduTable createTable (String TABLE_NAME) {
 
         try {
+            if(client ==null)
+                System.out.println("CREATETABLE");
+
             if (client.tableExists(TABLE_NAME)) {
+                System.out.println("OPENTABLE");
                 table = client.openTable(TABLE_NAME);
                 //KuduSession session = client.newSession();
-
+                System.out.println("BBBBB");
                 projectColumns = new ArrayList<>();
                 for(int i=0; i<table.getSchema().getColumnCount(); i++){
                     projectColumns.add(this.table.getSchema().getColumnByIndex(i).getName());
                 }
+                System.out.println("AAAAA");
 
             } else {
                 LOG.error("Table does not exist");

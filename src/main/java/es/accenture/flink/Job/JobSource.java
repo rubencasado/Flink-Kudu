@@ -26,9 +26,9 @@ public class JobSource {
         KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
         //KuduInputSplit a = null;
         //prueba.configure(new Configuration());
-        //prueba.open(a);
+        //prueba.open(prueba.createInputSplits(1)[0]);
 
-        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
         //KuduTypeInformation typeInformation = new KuduTypeInformation(prueba.getRows().get(0));
         TypeInformation<RowSerializable> typeInformation2 = TypeInformation.of(new TypeHint<RowSerializable>() { });
@@ -39,12 +39,12 @@ public class JobSource {
 
                     @Override
                     public String map(RowSerializable row) throws Exception {
-
+                        System.out.println("HOAL");
                         return row.toString();
                     }
                 });
 
-        source.writeAsText("~/test.txt");
+        source.writeAsText("test.txt");
 
         env.execute();
     }
