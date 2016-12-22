@@ -29,18 +29,24 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param host          Kudu host
      * @param tableName     Kudu table name
      * @param fieldsNames   List of column names in the table to be created
-     * @param tableMode     Way to operate with table(CREATE,APPEND,OVERRIDE)
+     * @param tableMode     Way to operate with table (CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
-    public KuduOutputFormat(String host, String tableName, String [] fieldsNames, String tableMode) throws KuduException {
-        if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            logger.error("ERROR: table mode parameter not valid (must be CREATE, APPEND or OVERRIDE)");
-            System.exit(1);
+    public KuduOutputFormat(String host, String tableName, String [] fieldsNames, String tableMode) throws Exception {
+        if (tableMode == null || tableMode.isEmpty()){
+            throw new Exception("ERROR: Param \"tableMode\" not valid (null or empty)");
+        } else if (!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
+            throw new Exception("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
+        } else if (host == null || host.isEmpty()){
+            throw new Exception("ERROR: Param \"host\" not valid (null or empty)");
+        } else if (tableName == null || tableName.isEmpty()){
+            throw new Exception("ERROR: Param \"tableName\" not valid (null or empty)");
+        }  else {
+            this.host = host;
+            this.tableName = tableName;
+            this.fieldsNames = fieldsNames;
+            this.tableMode = tableMode;
         }
-        this.host = host;
-        this.tableName = tableName;
-        this.fieldsNames = fieldsNames;
-        this.tableMode = tableMode;
     }
 
     /**
@@ -48,22 +54,28 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      *
      * @param host          Kudu host
      * @param tableName     Kudu table name to be used
-     * @param tableMode     Way to operate with table(CREATE,APPEND,OVERRIDE)
+     * @param tableMode     Way to operate with table (CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
 
-    public KuduOutputFormat(String host, String tableName, String tableMode) throws KuduException {
-        if(!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            logger.error("ERROR: table mode parameter not valid (must be CREATE, APPEND or OVERRIDE)");
-            System.exit(1);
+    public KuduOutputFormat(String host, String tableName, String tableMode) throws Exception {
+        if (tableMode == null || tableMode.isEmpty()){
+            throw new Exception("ERROR: Param \"tableMode\" not valid (null or empty)");
+        } else if (!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
+            throw new Exception("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
+        } else if (host == null || host.isEmpty()){
+            throw new Exception("ERROR: Param \"host\" not valid (null or empty)");
+        } else if (tableName == null || tableName.isEmpty()){
+            throw new Exception("ERROR: Param \"tableName\" not valid (null or empty)");
+        } else {
+            if (tableMode.equals("CREATE")) {
+                logger.error("ERROR: missing fields parameter at the constructor method");
+                System.exit(1);
+            }
+            this.host = host;
+            this.tableName = tableName;
+            this.tableMode = tableMode;
         }
-        if(tableMode.equals("CREATE")){
-            logger.error("ERROR: missing fields parameter at the constructor method");
-            System.exit(1);
-        }
-        this.host = host;
-        this.tableName = tableName;
-        this.tableMode = tableMode;
     }
 
     @Override
