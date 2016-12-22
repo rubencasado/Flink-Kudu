@@ -35,13 +35,21 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
     public KuduOutputFormat(String host, String tableName, String [] fieldsNames, String tableMode) throws Exception {
         if (tableMode == null || tableMode.isEmpty()){
             throw new Exception("ERROR: Param \"tableMode\" not valid (null or empty)");
+
         } else if (!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
             throw new Exception("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
+
+        } else if (tableMode.equals("CREATE")){
+            if(fieldsNames == null || fieldsNames.length == 0){
+                throw new Exception("ERROR: Missing param \"fieldNames\". Can't create a table without column names");
+            }
         } else if (host == null || host.isEmpty()){
             throw new Exception("ERROR: Param \"host\" not valid (null or empty)");
+
         } else if (tableName == null || tableName.isEmpty()){
             throw new Exception("ERROR: Param \"tableName\" not valid (null or empty)");
-        }  else {
+
+        } else {
             this.host = host;
             this.tableName = tableName;
             this.fieldsNames = fieldsNames;
@@ -57,21 +65,23 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode     Way to operate with table (CREATE,APPEND,OVERRIDE)
      * @throws KuduException
      */
-
     public KuduOutputFormat(String host, String tableName, String tableMode) throws Exception {
         if (tableMode == null || tableMode.isEmpty()){
             throw new Exception("ERROR: Param \"tableMode\" not valid (null or empty)");
-        } else if (!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
-            throw new Exception("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
+
+        } else if (tableMode.equals("CREATE")){
+            throw new Exception("ERROR: Param \"tableMode\" can't be CREATE if missing \"fieldNames\". Use other builder for this mode");
+
+        } else if (!(tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))){
+            throw new Exception("ERROR: Param \"tableMode\" not valid (must be APPEND or OVERRIDE)");
+
         } else if (host == null || host.isEmpty()){
             throw new Exception("ERROR: Param \"host\" not valid (null or empty)");
+
         } else if (tableName == null || tableName.isEmpty()){
             throw new Exception("ERROR: Param \"tableName\" not valid (null or empty)");
+
         } else {
-            if (tableMode.equals("CREATE")) {
-                logger.error("ERROR: missing fields parameter at the constructor method");
-                System.exit(1);
-            }
             this.host = host;
             this.tableName = tableName;
             this.tableMode = tableMode;
@@ -105,7 +115,6 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         try{
             this.utils = new Utils(host);
         } catch (Exception e){
-            logger.error(e.getMessage());
             e.printStackTrace();
         }
 
@@ -113,11 +122,10 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         try {
             this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
         } catch (Exception e) {
-            logger.error(e.getMessage());
             e.printStackTrace();
         }
 
-        // Case APPEND(or OVERRIDE), with builder without column names , because otherwise it throws a NullPointerException
+        // Case APPEND (or OVERRIDE), with builder without column names , because otherwise it throws a NullPointerException
         if(fieldsNames == null){
             fieldsNames = utils.getNamesOfColumns(table);
         } else {
@@ -125,14 +133,12 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
             try {
                 utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
             } catch (Exception e){
-                logger.error(e.getMessage());
                 e.printStackTrace();
             }
         }
 
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
-
 
         logger.info("Inserted the Row: " + utils.printRow(row));
     }
