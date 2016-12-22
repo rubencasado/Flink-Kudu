@@ -184,6 +184,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
+
         System.out.println("5. OPEN");
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
@@ -196,10 +197,15 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
         //table = client.openTable(TABLE_NAME);
 
+        /* TODO we need the KuduScanToken from the split and deserialize the KuduScanToken into scanner */
+        //KuduScanToken scanToken = ;
+        //scanner = scanToken.deserializeIntoScanner(scanToken.serialize(), client);
+
         endReached = false;
         scannedRows = 0;
 
-        scanner = client.newScannerBuilder(table).build();
+        //scanner = client.newScannerBuilder(table).build();
+
         results = scanner.nextRows();
 
         try{
@@ -313,7 +319,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
             List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
             for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
-                locations.add(replica.getRpcHost().concat(replica.getRpcPort().toString()));
+                locations.add(replica.getRpcHost().concat(":").concat(replica.getRpcPort().toString()));
+                System.out.println(replica.getRpcHost().concat(":").concat(replica.getRpcPort().toString()));
             }
             int numSplit = splits.size();
             KuduInputSplit split = new KuduInputSplit(numSplit, (locations.toArray(new String[locations.size()])),
