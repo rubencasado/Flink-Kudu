@@ -9,6 +9,33 @@ Data flows patterns:
   * Other source -> DataStream \<RowSerializable\> -> Kudu
 
 
+```java
+
+/* batch mode*/
+ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+
+KuduInputFormat ksource = new KuduInputFormat(SOURCE_TABLE, KUDU_MASTER);
+KuduTypeInformation typeInformation = new KuduTypeInformation(new RowSerialiazable());
+
+DataSet<RowSerializable> input = env.createInput(ksource, typeInformation);
+
+input.output(new KuduOutputFormat(KUDU_MASTER, DEST_TABLE, columnNames, KuduOutputFormat.CREATE));
+```
+
+```java
+
+/* Streaming mode*/
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+DataStream<String> stream = env.fromElements("data1 data2 data3");
+DataStream<RowSerializable> stream2 = stream.map(new MapToRowSerializable());
+
+stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
+
+```
+
+
+
 ## Requirements
 
 * Flink and Kudu compatible OS
