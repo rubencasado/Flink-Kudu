@@ -15,7 +15,7 @@ Data flows patterns:
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 KuduInputFormat ksource = new KuduInputFormat(SOURCE_TABLE, KUDU_MASTER);
-KuduTypeInformation typeInformation = new KuduTypeInformation(new RowSerialiazable());
+KuduTypeInformation typeInformation = new KuduTypeInformation(new RowSerializable());
 
 DataSet<RowSerializable> input = env.createInput(ksource, typeInformation);
 
