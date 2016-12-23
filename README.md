@@ -11,7 +11,7 @@ Data flows patterns:
 
 ```java
 
-/* batch mode*/
+/* batch mode */
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 KuduInputFormat ksource = new KuduInputFormat(SOURCE_TABLE, KUDU_MASTER);
@@ -24,7 +24,7 @@ input.output(new KuduOutputFormat(KUDU_MASTER, DEST_TABLE, columnNames, KuduOutp
 
 ```java
 
-/* Streaming mode*/
+/* Streaming mode */
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 DataStream<String> stream = env.fromElements("data1 data2 data3");
