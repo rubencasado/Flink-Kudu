@@ -14,6 +14,8 @@ import org.apache.flink.api.java.operators.DataSink;
 import org.apache.flink.api.java.typeutils.TypeInfoParser;
 import org.apache.flink.configuration.Configuration;
 
+import java.io.File;
+
 /**
  * Created by dani on 9/12/16.
  */
@@ -25,7 +27,7 @@ public class JobSource {
 
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("LONG", "localhost");
+        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
         //KuduInputSplit a = null;
         //prueba.configure(new Configuration());
         //prueba.open(prueba.createInputSplits(1)[0]);
@@ -45,8 +47,11 @@ public class JobSource {
                     }
                 });
 
-        source.writeAsText("test");
+        File file = new File("tmp/test");
+        file.delete();
 
+        source.writeAsText("tmp/test");
         env.execute();
+        File filew = new File("tmp/test");
     }
 }

@@ -224,6 +224,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * Generate a list which contains {@link RowSerializable}
      */
     private void generateRows() throws IllegalAccessException, IOException {
+        System.out.println("GenerateRows");
         List<RowSerializable> rows = new ArrayList<>();
         RowResult rowRes;
         RowSerializable row;
@@ -238,6 +239,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             rows.add(row);
             row=this.nextRecord(row);
         }
+        this.endReached=true;
         rows.add(row);
         this.rows=rows;
     }
@@ -263,9 +265,12 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             throw new IOException("No table scanner provided!");
         }
         try {
-            RowResult res = this.results.next();
-            RowSerializable resRow= RowResultToRowSerializable(res);
 
+            RowResult res = this.results.next();
+
+            System.out.println(res.toString());
+            RowSerializable resRow= RowResultToRowSerializable(res);
+            System.out.println("1");
             if (res != null) {
                 scannedRows++;
                 return resRow;
@@ -306,8 +311,10 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     @Override
     public KuduInputSplit[] createInputSplits(final int minNumSplits) {
         System.out.println("3. CREATE SPLITS");
-        KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(table)
-                .setProjectedColumnNames(projectColumns);
+
+        KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table)
+                .setProjectedColumnNames(this.projectColumns);
+
 
         List<KuduScanToken> tokens = builder.build();
         List<KuduInputSplit> splits = new ArrayList<>(minNumSplits);
