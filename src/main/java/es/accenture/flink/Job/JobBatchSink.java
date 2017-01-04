@@ -1,7 +1,6 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduOutputFormat;
-
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
@@ -22,40 +21,32 @@ public class JobBatchSink {
             String tableMode = args[1];
             String host = args[2];
 
-            if (tableName == null || tableName.isEmpty()) {
-                throw new Exception("ERROR: Param \"tableName\" not valid");
-            } else if (tableMode == null || tableMode.isEmpty()) {
-                throw new Exception("ERROR: Param \"tableMode\" not valid");
-            } else if (host == null || host.isEmpty()) {
-                throw new Exception("ERROR: Param \"host\" not valid");
-            } else {
+            String[] columnNames = new String[3];
+            columnNames[0] = "key";
+            columnNames[1] = "value";
+            columnNames[2] = "description";
 
-                String[] columnNames = new String[3];
-                columnNames[0] = "key";
-                columnNames[1] = "value";
-                columnNames[2] = "description";
+            final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-                final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+            DataSet<String> input = env.fromElements("fila100 value100 description100");
 
-                DataSet<String> input = env.fromElements("fila100 value100 description100");
-
-                DataSet<RowSerializable> out = input.map(new MapFunction<String, RowSerializable>() {
-                    @Override
-                    public RowSerializable map(String inputs) throws Exception {
-                        RowSerializable r = new RowSerializable(3);
-                        Integer i = 0;
-                        for (String s : inputs.split(" ")) {
-                            r.setField(i, s);
-                            i++;
-                        }
-                        return r;
+            DataSet<RowSerializable> out = input.map(new MapFunction<String, RowSerializable>() {
+                @Override
+                public RowSerializable map(String inputs) throws Exception {
+                    RowSerializable r = new RowSerializable(3);
+                    Integer i = 0;
+                    for (String s : inputs.split(" ")) {
+                        r.setField(i, s);
+                        i++;
                     }
-                });
+                    return r;
+                }
+            });
 
-                out.output(new KuduOutputFormat(host, tableName, columnNames, tableMode));
+            out.output(new KuduOutputFormat(host, tableName, columnNames, tableMode));
 
-                env.execute();
-            }
+            env.execute();
+
         } else {
             throw new Exception("ERROR: Missing params\nRequired params: 3, but found: " + args.length);
         }

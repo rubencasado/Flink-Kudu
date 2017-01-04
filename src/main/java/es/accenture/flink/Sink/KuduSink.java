@@ -5,6 +5,8 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.kudu.client.KuduTable;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+
 /**
  * Created by sergiy on 14/12/16.
  */
@@ -28,6 +30,14 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * @param fieldsNames   List of column names in the table to be created
      */
     public KuduSink (String host, String tableName, String [] fieldsNames){
+
+        if (host == null || host.isEmpty()) {
+            throw new IllegalArgumentException("ERROR: Param \"host\" not valid (null or empty)");
+
+        } else if (tableName == null || tableName.isEmpty()) {
+            throw new IllegalArgumentException("ERROR: Param \"tableName\" not valid (null or empty)");
+
+        }
         this.host = host;
         this.tableName = tableName;
         this.fieldsNames = fieldsNames;
@@ -40,6 +50,13 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * @param tableName     Kudu table name
      */
     public KuduSink (String host, String tableName){
+
+        if (host == null || host.isEmpty()) {
+            throw new IllegalArgumentException("ERROR: Param \"host\" not valid (null or empty)");
+
+        } else if (tableName == null || tableName.isEmpty()) {
+            throw new IllegalArgumentException("ERROR: Param \"tableName\" not valid (null or empty)");
+        }
         this.host = host;
         this.tableName = tableName;
     }
@@ -48,32 +65,27 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * It's responsible to insert a row into the indicated table by the builder (Streaming)
      *
      * @param row   Data of a row to insert
-     * @throws Exception
+     * @throws IOException
      */
     @Override
-    public void invoke(RowSerializable row) throws Exception {
-        this.utils = new Utils(host);
-        try {
-            this.table = utils.useTable(tableName, fieldsNames, row);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void invoke(RowSerializable row) throws IOException {
 
-        if(fieldsNames == null){
+        // Establish connection with Kudu
+        this.utils = new Utils(host);
+
+        // Look at the situation of the table (exist or not). Depending of the mode, the table is created or opened
+        this.table = utils.useTable(tableName, fieldsNames, row);
+
+        if(fieldsNames == null || fieldsNames.length == 0){
             fieldsNames = utils.getNamesOfColumns(table);
         } else {
             // When column names provided, and table exists, must check if column names match
-            try {
-                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
-            } catch (Exception e){
-                logger.error(e.getMessage());
-                System.exit(1);
-            }
+            utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
         }
 
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
-        logger.info("Inserted the Row: " + utils.printRow(row));
+        logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }

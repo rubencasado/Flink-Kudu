@@ -1,5 +1,7 @@
 package es.accenture.flink.Sink;
 
+import es.accenture.flink.Utils.Exceptions.KuduClientException;
+import es.accenture.flink.Utils.Exceptions.KuduTableException;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnSchema.ColumnSchemaBuilder;
@@ -25,14 +27,14 @@ public class Utils {
 
     /**
      * Builder Util Class which creates a Kudu client and log in to be able to perform operations later
-     * @param host Kudu host
-     * @throws KuduException
+     * @param host Kudu's host
+     * @throws NullPointerException when can't establish connection with Kudu
      */
 
-    public Utils(String host) throws Exception {
+    public Utils(String host) throws KuduClientException {
         this.client = new KuduClient.KuduClientBuilder(host).build();
-        if(client == null){
-            throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+        if (client == null){
+            throw new KuduClientException("ERROR: param \"host\" not valid, can't establish connection");
         }
         this.session = this.client.newSession();
     }
@@ -63,14 +65,15 @@ public class Utils {
      *     </ul>
      * </ul>
      *
-     * @param tableName     Table name to use
-     * @param fieldsNames   List of names of columns of the table (to create table)
-     * @param row           List of values to insert a row in the table (to know the types of columns)
-     * @param tableMode     Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
-     * @return              Instance of the table indicated
-     * @throws Exception    In case of wrong parameters or wrong combination (for example, APPEND mode to a non-existent table)
+     * @param tableName             Table name to use
+     * @param fieldsNames           List of names of columns of the table (to create table)
+     * @param row                   List of values to insert a row in the table (to know the types of columns)
+     * @param tableMode             Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
+     * @return                      Instance of the table indicated
+     * @throws KuduTableException   In case of can't access to a table o can't create it (wrong params or not existing table)
+     * @throws KuduException        In case of error of Kudu
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row, String tableMode) throws Exception {
+    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row, String tableMode) throws KuduTableException, KuduException {
         KuduTable table;
 
         switch(tableMode){
@@ -79,20 +82,20 @@ public class Utils {
                 try{
                     client.tableExists(tableName);
                 } catch (Exception e){
-                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
                 }
                 if (client.tableExists(tableName)){
                     logger.error("ERROR: The table already exists.");
-                    throw new Exception("ERROR: TableMode not valid (can't do CREATE when the table already exists).");
+                    throw new KuduTableException("ERROR: TableMode not valid (can't do CREATE when the table already exists).");
                 } else{
                     if (tableName == null || tableName.equals("")){
-                      throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
+                      throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
 
                     } else if(fieldsNames == null || fieldsNames[0].isEmpty()){
-                        throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"fields\" parameter.");
+                        throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"fields\" parameter.");
 
                     } else if (row == null){
-                        throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
+                        throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
 
                     } else {
                         table = createTable(tableName, fieldsNames, row);
@@ -105,14 +108,14 @@ public class Utils {
                 try{
                     client.tableExists(tableName);
                 } catch (Exception e){
-                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
                 }
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
                     table = client.openTable(tableName);
                 } else{
                     logger.error("ERROR: The table doesn't exist");
-                    throw new Exception("ERROR: The table doesn't exist, so can't do APPEND operation");
+                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do APPEND operation");
                 }
                 break;
 
@@ -121,7 +124,7 @@ public class Utils {
                 try{
                     client.tableExists(tableName);
                 } catch (Exception e){
-                    throw new Exception("ERROR: param \"host\" not valid, can't establish connection");
+                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
                 }
                 if (client.tableExists(tableName)){
                     logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
@@ -129,11 +132,11 @@ public class Utils {
                     table = client.openTable(tableName);
                 } else{
                     logger.error("ERROR: The table doesn't exist");
-                    throw new Exception("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
+                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                 }
                 break;
             default:
-                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableMode\" parameter.");
+                throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableMode\" parameter.");
         }
         return table;
     }
@@ -149,7 +152,7 @@ public class Utils {
      * @return              Instance of the table indicated
      * @throws Exception    In case of wrong parameters
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row) throws Exception {
+    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row) throws IllegalArgumentException, KuduException {
         KuduTable table;
 
         if (client.tableExists(tableName)){
@@ -157,13 +160,13 @@ public class Utils {
             table = client.openTable(tableName);
         } else {
             if (tableName == null || tableName.equals("")) {
-                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
+                throw new IllegalArgumentException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
 
             } else if (fieldsNames == null || fieldsNames[0].isEmpty()) {
-                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Missing \"fields\" parameter.");
+                throw new IllegalArgumentException("ERROR: Incorrect parameters, please check the constructor method. Missing \"fields\" parameter.");
 
             } else if (row == null){
-                throw new Exception("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
+                throw new IllegalArgumentException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
 
             } else {
                 logger.info("The table doesn't exist");
@@ -377,7 +380,7 @@ public class Utils {
         return array;
     }
 
-    public boolean checkNamesOfColumns(String [] tableNames, String [] providedNames) throws Exception{
+    public boolean checkNamesOfColumns(String [] tableNames, String [] providedNames) throws KuduTableException{
         boolean res = false;
         if(tableNames.length != providedNames.length){
             res = false;
@@ -387,7 +390,7 @@ public class Utils {
             }
         }
         if(!res){
-            throw new Exception("ERROR: The table column names and the provided column names don't match");
+            throw new KuduTableException("ERROR: The table column names and the provided column names don't match");
         }
         return res;
     }
