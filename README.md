@@ -11,7 +11,7 @@ Data flows patterns:
 
 ```java
 
-/* batch mode */
+/* Batch mode */
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 KuduInputFormat ksource = new KuduInputFormat(SOURCE_TABLE, KUDU_MASTER);
@@ -57,7 +57,7 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 
 # Build library
 
-```
+```shell
 git clone https://github.com/rubencasado/Flink-Kudu.git
 cd Flink-Kudu
 mvn clean install -DskipTests 
@@ -71,7 +71,7 @@ Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT
 <Flink-instalation-folder>/bin/flink run -c <Job-package-path> target/flink-kudu-1.0-SNAPSHOT.jar param1 param2 ...
 ```
 For example:
-```
+```shell
 /opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE localhost
 ```
 **Included examples**
