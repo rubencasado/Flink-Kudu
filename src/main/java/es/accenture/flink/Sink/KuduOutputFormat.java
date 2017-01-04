@@ -32,7 +32,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode   Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, String tableMode) throws IllegalArgumentException {
+    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, String tableMode){
         if (tableMode == null || tableMode.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
@@ -64,7 +64,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String tableMode) throws IllegalArgumentException {
+    public KuduOutputFormat(String host, String tableName, String tableMode){
         if (tableMode == null || tableMode.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
@@ -118,7 +118,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
 
         // Case APPEND (or OVERRIDE), with builder without column names, because otherwise it throws a NullPointerException
-        if(fieldsNames == null){
+        if(fieldsNames == null || fieldsNames.length == 0){
             fieldsNames = utils.getNamesOfColumns(table);
         } else {
             // When column names provided, and table exists, must check if column names match
@@ -128,6 +128,6 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
-        logger.info("Inserted the Row: " + utils.printRow(row));
+        logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }
