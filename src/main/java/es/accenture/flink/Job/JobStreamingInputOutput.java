@@ -1,34 +1,26 @@
 package es.accenture.flink.Job;
 
-import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Sources.KuduInputSplit;
+import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer09;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.UUID;
 
 /**
  * Created by dani on 14/12/16.
- * un job con datastream que lee de kafka, hace un minimo cambio con un map y va escribiendo en una tabla kudu
+ * Un job con datastream que lee de Kafka, hace un minimo cambio con un map y va escribiendo en una tabla kudu
  */
 public class JobStreamingInputOutput {
 
-    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.getProperty("tableName", "sample");
-
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
-        KuduInputSplit a = null;
-        prueba.configure(new Configuration());
-        prueba.open(a);
+        String tableName = args[0];
+        String host = args[1];
 
         String [] columnNames = new String[3];
         columnNames[0] = "key";
@@ -65,7 +57,7 @@ public class JobStreamingInputOutput {
             }
         });
 
-        //stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames)));
+        stream2.addSink(new KuduSink(host, tableName, columnNames));
 
         env.execute();
     }
