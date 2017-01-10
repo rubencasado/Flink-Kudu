@@ -207,7 +207,7 @@ public class Utils {
         }
         Schema schema = new Schema(columns);
         if ( ! client.tableExists(tableName)) {
-            table = client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys));
+            table = client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys).addHashPartitions(rangeKeys, 4));
             logger.info("SUCCESS: The table has been created successfully");
         } else {
             logger.error("ERROR: The table already exists");

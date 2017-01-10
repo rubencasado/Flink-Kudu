@@ -86,6 +86,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
+        utils.getClient().close();
         logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }
