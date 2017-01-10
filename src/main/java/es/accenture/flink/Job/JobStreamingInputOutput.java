@@ -1,35 +1,34 @@
 package es.accenture.flink.Job;
 
+import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer09;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.UUID;
 
 /**
  * Created by dani on 14/12/16.
- * un job con datastream que lee de kafka, hace un minimo cambio con un map y va escribiendo en una tabla kudu
+ * Un job con datastream que lee de Kafka, hace un minimo cambio con un map y va escribiendo en una tabla kudu
  */
 public class JobStreamingInputOutput {
 
-    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.getProperty("tableName", "sample");
-
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
+        String tableName = args[0];
+        String topic = args[1];
+        String host = args[2];
 
-        String [] columnNames = new String[2];
+        String [] columnNames = new String[4];
         columnNames[0] = "key";
         columnNames[1] = "value";
+        columnNames[2] = "descripcion";
+        columnNames[3] = "cuarto";
 
         UUID id = UUID.randomUUID();
 
@@ -40,7 +39,7 @@ public class JobStreamingInputOutput {
         prop.setProperty("group.id", String.valueOf(id));
         prop.setProperty("auto.offset.reset", "latest");
         prop.setProperty("zookeeper.connect", "localhost:2181");
-        prop.setProperty("topic", "test");
+        prop.setProperty("topic", topic);
 
         DataStream<String> stream = env.addSource(new FlinkKafkaConsumer09<>(
                 prop.getProperty("topic"),
@@ -51,7 +50,7 @@ public class JobStreamingInputOutput {
             @Override
             public RowSerializable map(String input) throws Exception {
 
-                RowSerializable res = new RowSerializable(input.split("\\n").length);
+                RowSerializable res = new RowSerializable(4);
                 Integer i = 0;
                 for (String s : input.split(" ")) {
                     res.setField(i, s);
@@ -61,7 +60,7 @@ public class JobStreamingInputOutput {
             }
         });
 
-        //stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames)));
+        stream2.addSink(new KuduSink(host, tableName, columnNames));
 
         env.execute();
     }
