@@ -1,6 +1,7 @@
 # User-specific stuff:
 .idea/workspace.xml
 .idea/libraries
+.idea/misc.xml
 
 ## File-based project format:
 #*.iws
