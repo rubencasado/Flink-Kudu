@@ -47,7 +47,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     private static final Logger LOG = Logger.getLogger(KuduInputFormat.class);
 
-    List<String> projectColumns;
+    private List<String> projectColumns;
 
     /**
      * Constructor of class KuduInputFormat
@@ -206,7 +206,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         try {
             System.out.println("SPLIT NUMBER "+split.getSplitNumber());
             scanner = tokens.get(split.getSplitNumber()).intoScanner(client);
-            System.out.println("SCANNER "+scanner);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -234,11 +233,16 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         if (scanner == null) {
             throw new IOException("No table scanner provided!");
         }
+        if (reuse == null){
+            throw new IOException("No row reuse provided");
+        }
+        if (results.getNumRows()==0){
+            throw new IOException("The table is empty");
+        }
         try {
 
             RowResult res = this.results.next();
 
-            System.out.println(res.toString());
             RowSerializable resRow= RowResultToRowSerializable(res);
             if (res != null) {
                 scannedRows++;
@@ -286,7 +290,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
 
         this.tokens = builder.build();
-        System.out.println("LOS TOKENS SON "+tokens);
         List<KuduInputSplit> splits = new ArrayList<>(minNumSplits);
 
         for (KuduScanToken token : tokens){
@@ -297,7 +300,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             List<String> locations = new ArrayList<>(token.getTablet().getReplicas().size());
             for (LocatedTablet.Replica replica : token.getTablet().getReplicas()) {
                 locations.add(replica.getRpcHost().concat(":").concat(replica.getRpcPort().toString()));
-                System.out.println(replica.getRpcHost().concat(":").concat(replica.getRpcPort().toString()));
             }
             int numSplit = splits.size();
             KuduInputSplit split = new KuduInputSplit(numSplit, (locations.toArray(new String[locations.size()])),

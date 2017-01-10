@@ -128,6 +128,8 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
+        this.utils.getClient().close();
+
         logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }

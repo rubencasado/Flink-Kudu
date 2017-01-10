@@ -7,6 +7,7 @@ import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.KuduTypeInformation;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.table.Row;
@@ -23,22 +24,21 @@ import java.util.Scanner;
 public class JobBatchInputOutput {
 
     public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.getProperty("tableName", "sample");
+    public static final String TABLE_NAME = System.getProperty("tableName", "Table_1");
+    public static final String TABLE_NAME2 = System.getProperty("tableName", "Table_2");
 
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
-        prueba.configure(new Configuration());
-        prueba.open(null);
+        KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
-        String [] columnNames = new String[3];
+        String [] columnNames = new String[2];
         columnNames[0] = "key";
         columnNames[1] = "value";
-        columnNames[2] = "descripcion";
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        KuduTypeInformation typeInformation = new KuduTypeInformation(prueba.getRows().get(0));
+        TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
+
         DataSet<RowSerializable> input = env.createInput(prueba, typeInformation);
 
         input.map(new MapFunction<RowSerializable, RowSerializable>() {
@@ -59,7 +59,7 @@ public class JobBatchInputOutput {
             }
         });
 
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME, columnNames, "APPEND"));
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "APPEND"));
 
         env.execute();
     }

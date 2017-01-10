@@ -25,15 +25,11 @@ public class JobStreamingInputOutput {
 
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat("Table_1", "localhost");
-        KuduInputSplit a = null;
-        prueba.configure(new Configuration());
-        prueba.open(a);
+        KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
-        String [] columnNames = new String[3];
+        String [] columnNames = new String[2];
         columnNames[0] = "key";
         columnNames[1] = "value";
-        columnNames[2] = "descripcion";
 
         UUID id = UUID.randomUUID();
 
