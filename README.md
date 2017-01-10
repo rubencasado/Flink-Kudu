@@ -49,9 +49,9 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 ### Completed
 - [x] Sink implementation for Batch Processing and example job.
 - [x] Sink implementation for Streaming Processing and example job.
+- [x] Source implementation for Batch Processing and example job.
 
 ### Working
-- [ ] Source implementation for Batch Processing and example job.
 - [ ] Unit Tests for main classes.
 - [ ] Kafka integration in example job
 
@@ -75,8 +75,8 @@ For example:
 /opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE localhost
 ```
 **Included examples**
-- [ ] JobSource (**es.accenture.flink.Job.JobSource**): Reads data from a Kudu table and prints the information (*DataSet API, Batch Mode*).
+- [x] JobSource (**es.accenture.flink.Job.JobSource**): Reads data from a Kudu table and prints the information (*DataSet API, Batch Mode*).
 - [x] JobBatchSink (**es.accenture.flink.Job.JobBatchSink**): Saves data from a DataSet into a Kudu table(*DataSet API, Batch Mode*). Input parameters: *table_name*, *table_mode* (CREATE, APPEND or OVERRIDE) and *host*.
-- [ ] JobBatchInputOutput (**es.accenture.flink.Job.JobBatchInputOutput**): Reads data from a Kudu table, executes some basic operations using DataSet API and save the result into a Kudu table(*DataSet API, Batch Mode*).
+- [x] JobBatchInputOutput (**es.accenture.flink.Job.JobBatchInputOutput**): Reads data from a Kudu table, executes some basic operations using DataSet API and save the result into a Kudu table(*DataSet API, Batch Mode*).
 - [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): Saves data from a DataStream into a Kudu table (*DataStream API, Streaming Mode*). Input parameters: *table_name* and *host*.
 - [ ] JobStreamingInputOutput (**es.accenture.flink.Job.JobStreamingInputOutput**): Reads data from Kafka, executes some basic operations using DataStream API and saves results into a Kudu table (*DataStream API, Streaming Mode*).
