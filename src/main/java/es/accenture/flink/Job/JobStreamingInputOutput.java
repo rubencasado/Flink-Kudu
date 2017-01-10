@@ -20,12 +20,14 @@ public class JobStreamingInputOutput {
     public static void main(String[] args) throws Exception {
 
         String tableName = args[0];
-        String host = args[1];
+        String topic = args[1];
+        String host = args[2];
 
-        String [] columnNames = new String[3];
+        String [] columnNames = new String[4];
         columnNames[0] = "key";
         columnNames[1] = "value";
         columnNames[2] = "descripcion";
+        columnNames[3] = "cuarto";
 
         UUID id = UUID.randomUUID();
 
@@ -36,7 +38,7 @@ public class JobStreamingInputOutput {
         prop.setProperty("group.id", String.valueOf(id));
         prop.setProperty("auto.offset.reset", "latest");
         prop.setProperty("zookeeper.connect", "localhost:2181");
-        prop.setProperty("topic", "test");
+        prop.setProperty("topic", topic);
 
         DataStream<String> stream = env.addSource(new FlinkKafkaConsumer09<>(
                 prop.getProperty("topic"),
@@ -47,7 +49,7 @@ public class JobStreamingInputOutput {
             @Override
             public RowSerializable map(String input) throws Exception {
 
-                RowSerializable res = new RowSerializable(input.split("\\n").length);
+                RowSerializable res = new RowSerializable(4);
                 Integer i = 0;
                 for (String s : input.split(" ")) {
                     res.setField(i, s);
