@@ -155,25 +155,15 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     public KuduTable createTable (String TABLE_NAME) {
 
+        LOG.info("OPENTABLE");
         try {
-            if(client ==null)
-                LOG.info("CREATETABLE");
-
-            if (client.tableExists(TABLE_NAME)) {
-                LOG.info("OPENTABLE");
-                table = client.openTable(TABLE_NAME);
-                projectColumns = new ArrayList<>();
-                for(int i=0; i<table.getSchema().getColumnCount(); i++){
-                    projectColumns.add(this.table.getSchema().getColumnByIndex(i).getName());
-                }
-
-            } else {
-                LOG.error("Table does not exist");
-                client.close();
-            }
-        }catch (Exception e){
-            throw new RuntimeException("Could not obtain table");
-
+            table = client.openTable(TABLE_NAME);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not obtain the table " + TABLE_NAME + " from master", e);
+        }
+        projectColumns = new ArrayList<>();
+        for (int i = 0; i < table.getSchema().getColumnCount(); i++) {
+            projectColumns.add(this.table.getSchema().getColumnByIndex(i).getName());
         }
         return table;
     }
