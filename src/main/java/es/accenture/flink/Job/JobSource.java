@@ -47,11 +47,16 @@ public class JobSource {
                     }
                 });
 
-        File file = new File("tmp/test");
-        file.delete();
+        File dir = new File("tmp/test");
+        File[] files = dir.listFiles();
+        if (files!=null) {
+            for (int i = 0; i < files.length; i++) {
+                files[i].delete();
+            }
+        }
+        dir.delete();
 
         source.writeAsText("tmp/test");
         env.execute();
-        File filew = new File("tmp/test");
     }
 }
