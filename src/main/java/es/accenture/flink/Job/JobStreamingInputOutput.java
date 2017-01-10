@@ -1,6 +1,7 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduSink;
+import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
