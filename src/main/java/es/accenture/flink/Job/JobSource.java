@@ -27,13 +27,7 @@ public class JobSource {
         TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
         DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
 
-        source.map(new MapFunction<RowSerializable, String>() {
-
-                    @Override
-                    public String map(RowSerializable row) throws Exception {
-                        return row.toString();
-                    }
-                });
+        DataSet<String> str = source.map(new MyMapFunction());
 
         File dir = new File("tmp/test");
         File[] files = dir.listFiles();
@@ -44,7 +38,15 @@ public class JobSource {
         }
         dir.delete();
 
-        source.writeAsText("tmp/test");
+        str.writeAsText("tmp/test");
         env.execute();
+    }
+
+    private static class MyMapFunction implements MapFunction<RowSerializable, String> {
+
+        @Override
+        public String map(RowSerializable row) throws Exception {
+            return row.toString();
+        }
     }
 }
