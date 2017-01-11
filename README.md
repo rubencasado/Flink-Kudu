@@ -68,6 +68,11 @@ Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT
 
 ## Execution
 
+First of all, must start Flink Job Manager
+```
+<Flink-installation-folder>/bin/start-local.sh
+```
+Now we are able to submit the jobs.
 ```
 <Flink-instalation-folder>/bin/flink run -c <Job-package-path> target/flink-kudu-1.0-SNAPSHOT.jar param1 param2 ...
 ```
