@@ -7,6 +7,7 @@ import es.accenture.flink.Sources.KuduInputSplit;
 import es.accenture.flink.Utils.KuduTypeInformation;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.IntegerTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -39,28 +40,30 @@ public class JobBatchInputOutput {
 
         TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
 
-        DataSet<RowSerializable> input = env.createInput(prueba, typeInformation);
+        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
 
-        input.map(new MapFunction<RowSerializable, RowSerializable>() {
+        DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
-            @Override
-            public RowSerializable map(RowSerializable row) throws Exception {
-
-                RowSerializable res = row;
-
-                for (int i = 0; i<row.productArity(); i++){
-                    if (row.productElement(i).equals(String.class))
-                        res.setField(i, row.productElement(i).toString().toUpperCase());
-                    else if (row.productElement(i).equals(Double.class))
-                        res.setField(i, Float.parseFloat(row.productElement(i).toString())*2);
-                    else continue;
-                }
-                return res;
-            }
-        });
-
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "APPEND"));
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "CREATE"));
 
         env.execute();
+    }
+
+    private static class MyMapFunction implements MapFunction<RowSerializable, RowSerializable> {
+
+        @Override
+        public RowSerializable map(RowSerializable row) throws Exception {
+
+            RowSerializable res = row;
+
+            for (int i = 0; i < row.productArity(); i++) {
+                if (row.productElement(i).getClass().equals(String.class))
+                    res.setField(1, row.productElement(1).toString().toUpperCase());
+                else if (row.productElement(i).getClass().equals(Integer.class))
+                    res.setField(0, (Integer)row.productElement(0)*2);
+            else continue;
+            }
+            return res;
+        }
     }
 }
