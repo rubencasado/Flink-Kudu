@@ -30,7 +30,7 @@ public class JobBatchInputOutput {
 
     public static void main(String[] args) throws Exception {
 
-        KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
+        KuduInputFormat KuduInputTest = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
         String [] columnNames = new String[2];
         columnNames[0] = "key";
@@ -40,11 +40,11 @@ public class JobBatchInputOutput {
 
         TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
 
-        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
+        DataSet<RowSerializable> source = env.createInput(KuduInputTest, typeInformation);
 
         DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "CREATE"));
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "APPEND"));
 
         env.execute();
     }

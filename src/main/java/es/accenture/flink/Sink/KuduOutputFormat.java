@@ -1,5 +1,7 @@
 package es.accenture.flink.Sink;
 
+import es.accenture.flink.Utils.Exceptions.KuduClientException;
+import es.accenture.flink.Utils.Exceptions.KuduTableException;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
@@ -32,7 +34,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode   Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, String tableMode){
+    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, String tableMode) throws KuduException, KuduTableException, KuduClientException {
         if (tableMode == null || tableMode.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
@@ -54,6 +56,8 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         this.tableName = tableName;
         this.fieldsNames = fieldsNames;
         this.tableMode = tableMode;
+        System.out.println(tableName + fieldsNames + tableMode);
+
     }
 
     /**
@@ -64,7 +68,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String tableMode){
+    public KuduOutputFormat(String host, String tableName, String tableMode) throws KuduException, KuduTableException, KuduClientException {
         if (tableMode == null || tableMode.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
@@ -84,6 +88,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         this.host = host;
         this.tableName = tableName;
         this.tableMode = tableMode;
+
     }
 
 
@@ -94,12 +99,15 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
     @Override
     public void open(int i, int i1) throws IOException {
+        // Establish connection with Kudu
+        this.utils = new Utils(host);
+        this.table = utils.useTable(tableName, fieldsNames, tableMode);
 
     }
 
     @Override
     public void close() throws IOException {
-
+        this.utils.getClient().close();
     }
 
     /**
@@ -111,25 +119,23 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
     @Override
     public void writeRecord(RowSerializable row) throws IOException {
 
-        // Establish connection with Kudu
-        this.utils = new Utils(host);
+
 
         // Look at the situation of the table (exist or not). Depending of the mode, the table is created or opened
-        this.table = utils.useTable(tableName, fieldsNames, row, tableMode);
 
         // Case APPEND (or OVERRIDE), with builder without column names, because otherwise it throws a NullPointerException
         if(fieldsNames == null || fieldsNames.length == 0){
             fieldsNames = utils.getNamesOfColumns(table);
         } else {
             // When column names provided, and table exists, must check if column names match
-            utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
         }
 
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
-        this.utils.getClient().close();
 
-        logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
+
+        //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }

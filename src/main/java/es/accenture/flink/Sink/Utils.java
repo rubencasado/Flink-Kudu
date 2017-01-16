@@ -67,13 +67,12 @@ public class Utils {
      *
      * @param tableName             Table name to use
      * @param fieldsNames           List of names of columns of the table (to create table)
-     * @param row                   List of values to insert a row in the table (to know the types of columns)
      * @param tableMode             Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
      * @return                      Instance of the table indicated
      * @throws KuduTableException   In case of can't access to a table o can't create it (wrong params or not existing table)
      * @throws KuduException        In case of error of Kudu
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row, String tableMode) throws KuduTableException, KuduException {
+    public KuduTable useTable(String tableName, String [] fieldsNames, String tableMode) throws KuduTableException, KuduException {
         KuduTable table;
 
         switch(tableMode){
@@ -94,45 +93,40 @@ public class Utils {
                     } else if(fieldsNames == null || fieldsNames[0].isEmpty()){
                         throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"fields\" parameter.");
 
-                    } else if (row == null){
-                        throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"row\" parameter.");
-
                     } else {
-                        table = createTable(tableName, fieldsNames, row);
+                        table = createTable(tableName, fieldsNames);
                     }
                 }
                 break;
 
             case "APPEND":
-                logger.info("Modo APPEND");
+                //logger.info("Modo APPEND");
                 try{
-                    client.tableExists(tableName);
+                    if (client.tableExists(tableName)){
+                        //logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
+                        table = client.openTable(tableName);
+                    } else{
+                        logger.error("ERROR: The table doesn't exist");
+                        throw new KuduTableException("ERROR: The table doesn't exist, so can't do APPEND operation");
+                    }
                 } catch (Exception e){
                     throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
-                }
-                if (client.tableExists(tableName)){
-                    logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
-                    table = client.openTable(tableName);
-                } else{
-                    logger.error("ERROR: The table doesn't exist");
-                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do APPEND operation");
                 }
                 break;
 
             case "OVERRIDE":
                 logger.info("Modo OVERRIDE");
                 try{
-                    client.tableExists(tableName);
+                    if (client.tableExists(tableName)){
+                        logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
+                        clearTable(tableName);
+                        table = client.openTable(tableName);
+                    } else{
+                        logger.error("ERROR: The table doesn't exist");
+                        throw new KuduTableException("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
+                    }
                 } catch (Exception e){
                     throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
-                }
-                if (client.tableExists(tableName)){
-                    logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
-                    clearTable(tableName);
-                    table = client.openTable(tableName);
-                } else{
-                    logger.error("ERROR: The table doesn't exist");
-                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                 }
                 break;
             default:
@@ -170,7 +164,7 @@ public class Utils {
 
             } else {
                 logger.info("The table doesn't exist");
-                table = createTable(tableName, fieldsNames, row);
+                table = createTable(tableName, fieldsNames);
             }
         }
         return table;
@@ -181,27 +175,31 @@ public class Utils {
      *
      * @param tableName     name of the table to create
      * @param fieldsNames   list name columns of the table
-     * @param row           list of values to insert a row in the table( to know the types of columns)
      * @return              instance of the table indicated
      * @throws KuduException
      */
-    public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException {
+    public KuduTable createTable (String tableName, String [] fieldsNames) throws KuduException {
         KuduTable table = null;
         List<ColumnSchema> columns = new ArrayList<ColumnSchema>();
         List<String> rangeKeys = new ArrayList<String>(); // Primary key
         rangeKeys.add(fieldsNames[0]);
 
+
+
+        //TODO Implement types of columns
+
+
         logger.info("Creating the table \"" + tableName + "\"...");
         for (int i = 0; i < fieldsNames.length; i++){
             ColumnSchema col;
             String colName = fieldsNames[i];
-            Type colType = getRowsPositionType(i, row);
+            //Type colType = getRowsPositionType(i, row);
 
             if (colName.equals(fieldsNames[0])) {
-                col = new ColumnSchemaBuilder(colName, colType).key(true).build();
+                col = new ColumnSchemaBuilder(colName, Type.INT32/*colType*/).key(true).build();
                 columns.add(0, col);//To create the table, the key must be the first in the column list otherwise it will give a failure
             } else {
-                col = new ColumnSchemaBuilder(colName, colType).build();
+                col = new ColumnSchemaBuilder(colName, Type.INT32/*colType*/).build();
                 columns.add(col);
             }
         }

@@ -18,8 +18,7 @@ public class JobStreamingSink {
     // Args[0] = sample
     // Args[1] = localhost
     public static void main(String[] args) throws Exception {
-        String tableName = args[0];
-        String host = args[1];
+
 
         String [] columnNames = new String[3];
         columnNames[0] = "key";
@@ -43,7 +42,7 @@ public class JobStreamingSink {
             }
         });
 
-        stream2.addSink(new KuduSink(host, tableName, columnNames));
+        stream2.addSink(new KuduSink("localhost", "Table_5", columnNames));
 
         env.execute();
     }
