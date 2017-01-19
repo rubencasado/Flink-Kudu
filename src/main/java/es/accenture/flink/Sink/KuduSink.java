@@ -1,6 +1,7 @@
 package es.accenture.flink.Sink;
 
 import es.accenture.flink.Utils.RowSerializable;
+import es.accenture.flink.Utils.Utils;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.kudu.client.KuduTable;
 import org.apache.log4j.Logger;

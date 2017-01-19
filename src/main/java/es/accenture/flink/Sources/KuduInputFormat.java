@@ -194,7 +194,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         scannedRows = 0;
 
         try {
-            System.out.println("SPLIT NUMBER "+split.getSplitNumber());
+            LOG.info("SPLIT NUMBER "+split.getSplitNumber());
             scanner = tokens.get(split.getSplitNumber()).intoScanner(client);
         } catch (Exception e) {
             e.printStackTrace();

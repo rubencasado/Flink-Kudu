@@ -1,13 +1,15 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.*;
+import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
+import es.accenture.flink.Utils.Utils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.junit.*;
 
-import static org.junit.Assert.*;
+import static es.accenture.flink.Utils.ModeType.CREATE;
 
 /**
  * Created by jenni on 14/12/16.
@@ -58,7 +60,7 @@ public class JobBatchSinkTest{
                 return r;
             }
         });
-        kuduformat=  new KuduOutputFormat(KUDU_MASTER, TABLE_NAME, columnNames, "CREATE");
+        kuduformat=  new KuduOutputFormat(KUDU_MASTER, TABLE_NAME, columnNames, CREATE);
         out_test.output(kuduformat);
          
          //kuduformat.writeRecord(r);

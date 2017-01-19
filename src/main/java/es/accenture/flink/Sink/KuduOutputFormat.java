@@ -2,7 +2,9 @@ package es.accenture.flink.Sink;
 
 import es.accenture.flink.Utils.Exceptions.KuduClientException;
 import es.accenture.flink.Utils.Exceptions.KuduTableException;
+import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
+import es.accenture.flink.Utils.Utils;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.kudu.client.*;
@@ -10,15 +12,19 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
+import static es.accenture.flink.Utils.ModeType.APPEND;
+import static es.accenture.flink.Utils.ModeType.CREATE;
+import static es.accenture.flink.Utils.ModeType.OVERRIDE;
+
 /**
  * Created by sshvayka on 21/11/16.
  */
 public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
-    private String host, tableName, tableMode;
+    private String host, tableName;
+    private ModeType tableMode;
     private String[] fieldsNames;
     private transient Utils utils;
-
     //Kudu variables
     private transient KuduTable table;
 
@@ -34,14 +40,14 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode   Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, String tableMode) throws KuduException, KuduTableException, KuduClientException {
-        if (tableMode == null || tableMode.isEmpty()) {
+    public KuduOutputFormat(String host, String tableName, String[] fieldsNames, ModeType tableMode) throws KuduException, KuduTableException, KuduClientException {
+        if (tableMode == null || (tableMode != CREATE && tableMode != APPEND && tableMode != OVERRIDE )) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
-        } else if (!(tableMode.equals("CREATE") || tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))) {
+        } else if (!(tableMode == CREATE || tableMode == APPEND || tableMode == OVERRIDE)) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
 
-        } else if (tableMode.equals("CREATE")) {
+        } else if (tableMode == CREATE) {
             if (fieldsNames == null || fieldsNames.length == 0)
                 throw new IllegalArgumentException("ERROR: Missing param \"fieldNames\". Can't create a table without column names");
 
@@ -56,7 +62,6 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         this.tableName = tableName;
         this.fieldsNames = fieldsNames;
         this.tableMode = tableMode;
-        System.out.println(tableName + fieldsNames + tableMode);
 
     }
 
@@ -68,14 +73,14 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableMode Way to operate with table (CREATE, APPEND, OVERRIDE)
      * @throws IllegalArgumentException when wrong params
      */
-    public KuduOutputFormat(String host, String tableName, String tableMode) throws KuduException, KuduTableException, KuduClientException {
-        if (tableMode == null || tableMode.isEmpty()) {
+    public KuduOutputFormat(String host, String tableName, ModeType tableMode) throws KuduException, KuduTableException, KuduClientException {
+        if (tableMode == null || (tableMode != CREATE && tableMode != APPEND && tableMode != OVERRIDE )) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (null or empty)");
 
-        } else if (tableMode.equals("CREATE")) {
+        } else if (tableMode == CREATE) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" can't be CREATE if missing \"fieldNames\". Use other builder for this mode");
 
-        } else if (!(tableMode.equals("APPEND") || tableMode.equals("OVERRIDE"))) {
+        } else if (!(tableMode == APPEND || tableMode == OVERRIDE)) {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (must be APPEND or OVERRIDE)");
 
         } else if (host == null || host.isEmpty()) {
@@ -99,10 +104,26 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
     @Override
     public void open(int i, int i1) throws IOException {
+
         // Establish connection with Kudu
         this.utils = new Utils(host);
-        this.table = utils.useTable(tableName, fieldsNames, tableMode);
+        if(this.utils.getClient().tableExists(tableName)){
+            logger.info("Mode is CREATE and table already exist. Changed mode to APPEND. Warning, parallelism may be less efficient");
+            tableMode = APPEND;
+        }
 
+        // Case APPEND (or OVERRIDE), with builder without column names, because otherwise it throws a NullPointerException
+        if(tableMode == APPEND || tableMode == OVERRIDE) {
+            this.table = utils.useTable(tableName, tableMode);
+
+            if (fieldsNames == null || fieldsNames.length == 0) {
+                fieldsNames = utils.getNamesOfColumns(table);
+            } else {
+                // When column names provided, and table exists, must check if column names match
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
+            }
+
+        }
     }
 
     @Override
@@ -119,23 +140,17 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
     @Override
     public void writeRecord(RowSerializable row) throws IOException {
 
-
-
-        // Look at the situation of the table (exist or not). Depending of the mode, the table is created or opened
-
-        // Case APPEND (or OVERRIDE), with builder without column names, because otherwise it throws a NullPointerException
-        if(fieldsNames == null || fieldsNames.length == 0){
-            fieldsNames = utils.getNamesOfColumns(table);
-        } else {
-            // When column names provided, and table exists, must check if column names match
-            utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
+        if((tableMode== CREATE) && (!utils.getClient().tableExists(tableName))) {
+            this.table = utils.useTable(tableName, fieldsNames, row);
+            if(fieldsNames == null || fieldsNames.length == 0){
+                fieldsNames = utils.getNamesOfColumns(table);
+            } else {
+                // When column names provided, and table exists, must check if column names match
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
+            }
         }
 
-        // Make the insert into the table
         utils.insert(table, row, fieldsNames);
-
-
-
         //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }
