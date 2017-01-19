@@ -1,20 +1,20 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduOutputFormat;
-import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Sources.KuduInputSplit;
-import es.accenture.flink.Utils.KuduTypeInformation;
+import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.typeinfo.IntegerTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.table.Row;
-import org.apache.flink.configuration.Configuration;
+
 
 import java.util.Scanner;
+
+import static es.accenture.flink.Utils.ModeType.APPEND;
+import static es.accenture.flink.Utils.ModeType.CREATE;
+import static es.accenture.flink.Utils.ModeType.OVERRIDE;
 
 /**
  * Created by dani on 14/12/16.
@@ -24,11 +24,53 @@ import java.util.Scanner;
  */
 public class JobBatchInputOutput {
 
-    public static final String KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-    public static final String TABLE_NAME = System.getProperty("tableName", "Table_1");
-    public static final String TABLE_NAME2 = System.getProperty("tableName", "Table_2");
 
     public static void main(String[] args) throws Exception {
+
+        /********Only for test, delete once finished*******/
+        args[0]="Table_1";
+        args[1]="Table_40";
+        args[2]="Create";
+        args[3]="localhost";
+        /**************************************************/
+
+
+        System.out.println("-----------------------------------------------");
+        System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
+                            "2. Change field 'value' to uppercase.\n" +
+                            "3. Write back in a new Kudu DB (" + args[1] + ").");
+        System.out.println("-----------------------------------------------\n");
+
+        if(args.length!=4){
+            System.out.println("PARAM ERROR: 4 params required but " + args.length + " given");
+            System.out.println( "Run program with arguments: [TableRead] [TableWrite] [Mode] [Master Adress]\n" +
+                    "- TableToRead: Name of the table to read.\n" +
+                    "- TableToWrite: Name of the table to write.\n" +
+                    "- Mode:  'Create'      If 'TableToWrite' does not exist. It is created and filled with the information.\n" +
+                    "         'Append'      Adds rows to the existing Kudu Database 'TableToWrite'.\n" +
+                    "         'Override'    Clear the given table 'TableToWrite' and appends it rows.\n" +
+                    "- Master Address: RPC Address for Master consensus-configuration (For example: localhost)\n");
+            return;
+        }
+
+        final String TABLE_NAME = args[0];
+        final String TABLE_NAME2 = args[1];
+        final ModeType MODE;
+        if (args[2].equalsIgnoreCase("create")){
+            MODE = CREATE;
+        }else if (args[2].equalsIgnoreCase("append")){
+            MODE = APPEND;
+        } else if (args[2].equalsIgnoreCase("override")){
+            MODE = OVERRIDE;
+        } else{
+            System.out.println("Error in param [Mode]. Only create, append or override allowed.");
+            return;
+        }
+        final String KUDU_MASTER = args[3];
+
+
+
+        long startTime = System.currentTimeMillis();
 
         KuduInputFormat KuduInputTest = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
@@ -44,9 +86,21 @@ public class JobBatchInputOutput {
 
         DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, "APPEND"));
+
+        if(MODE == CREATE) {
+            /*Warning: If create mode is selected and the table exists, program will change mode to append with parallelism = 1.
+            *           change mode to append in params in order to properly parallel the sink*/
+            input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE))
+                    .setParallelism(1);
+        } else {
+            input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE));
+        }
 
         env.execute();
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("Program executed in " + (endTime - startTime)/1000 + " seconds");  //divide by 1000000 to get milliseconds.
     }
 
     private static class MyMapFunction implements MapFunction<RowSerializable, RowSerializable> {
@@ -60,7 +114,7 @@ public class JobBatchInputOutput {
                 if (row.productElement(i).getClass().equals(String.class))
                     res.setField(1, row.productElement(1).toString().toUpperCase());
                 else if (row.productElement(i).getClass().equals(Integer.class))
-                    res.setField(0, (Integer)row.productElement(0)*2);
+                    res.setField(0, (Integer)row.productElement(0)*1);
             else continue;
             }
             return res;

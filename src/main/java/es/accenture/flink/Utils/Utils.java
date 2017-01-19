@@ -1,8 +1,7 @@
-package es.accenture.flink.Sink;
+package es.accenture.flink.Utils;
 
 import es.accenture.flink.Utils.Exceptions.KuduClientException;
 import es.accenture.flink.Utils.Exceptions.KuduTableException;
-import es.accenture.flink.Utils.RowSerializable;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnSchema.ColumnSchemaBuilder;
 import org.apache.kudu.Schema;
@@ -12,6 +11,8 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static es.accenture.flink.Utils.ModeType.CREATE;
 
 /**
  * Created by sshvayka on 21/11/16.
@@ -66,41 +67,21 @@ public class Utils {
      * </ul>
      *
      * @param tableName             Table name to use
-     * @param fieldsNames           List of names of columns of the table (to create table)
      * @param tableMode             Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
      * @return                      Instance of the table indicated
      * @throws KuduTableException   In case of can't access to a table o can't create it (wrong params or not existing table)
      * @throws KuduException        In case of error of Kudu
      */
-    public KuduTable useTable(String tableName, String [] fieldsNames, String tableMode) throws KuduTableException, KuduException {
+    public KuduTable useTable(String tableName, ModeType tableMode) throws KuduTableException, KuduException {
         KuduTable table;
 
         switch(tableMode){
-            case "CREATE":
-                logger.info("Modo CREATE");
-                try{
-                    client.tableExists(tableName);
-                } catch (Exception e){
-                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
-                }
-                if (client.tableExists(tableName)){
-                    logger.error("ERROR: The table already exists.");
-                    throw new KuduTableException("ERROR: TableMode not valid (can't do CREATE when the table already exists).");
-                } else{
-                    if (tableName == null || tableName.equals("")){
-                      throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableName\" parameter.");
-
-                    } else if(fieldsNames == null || fieldsNames[0].isEmpty()){
-                        throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"fields\" parameter.");
-
-                    } else {
-                        table = createTable(tableName, fieldsNames);
-                    }
-                }
+            case CREATE:
+                logger.error("Bad call method, use useTable(String tableName, String [] fieldsNames, RowSerializable row) instead");
+                table = null;
                 break;
-
-            case "APPEND":
-                //logger.info("Modo APPEND");
+            case APPEND:
+                logger.info("Modo APPEND");
                 try{
                     if (client.tableExists(tableName)){
                         //logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
@@ -114,7 +95,7 @@ public class Utils {
                 }
                 break;
 
-            case "OVERRIDE":
+            case OVERRIDE:
                 logger.info("Modo OVERRIDE");
                 try{
                     if (client.tableExists(tableName)){
@@ -164,56 +145,53 @@ public class Utils {
 
             } else {
                 logger.info("The table doesn't exist");
-                table = createTable(tableName, fieldsNames);
+                table = createTable(tableName, fieldsNames, row);
             }
         }
         return table;
     }
-
     /**
      * Create a new Kudu table and return the instance of this table
      *
      * @param tableName     name of the table to create
      * @param fieldsNames   list name columns of the table
+     * @param row           list of values to insert a row in the table( to know the types of columns)
      * @return              instance of the table indicated
      * @throws KuduException
      */
-    public KuduTable createTable (String tableName, String [] fieldsNames) throws KuduException {
-        KuduTable table = null;
+    public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException {
+
+        if(client.tableExists(tableName))
+            return client.openTable(tableName);
+
+
         List<ColumnSchema> columns = new ArrayList<ColumnSchema>();
         List<String> rangeKeys = new ArrayList<String>(); // Primary key
         rangeKeys.add(fieldsNames[0]);
-
-
-
-        //TODO Implement types of columns
-
 
         logger.info("Creating the table \"" + tableName + "\"...");
         for (int i = 0; i < fieldsNames.length; i++){
             ColumnSchema col;
             String colName = fieldsNames[i];
-            //Type colType = getRowsPositionType(i, row);
+            Type colType = getRowsPositionType(i, row);
 
             if (colName.equals(fieldsNames[0])) {
-                col = new ColumnSchemaBuilder(colName, Type.INT32/*colType*/).key(true).build();
+                col = new ColumnSchemaBuilder(colName, colType).key(true).build();
                 columns.add(0, col);//To create the table, the key must be the first in the column list otherwise it will give a failure
             } else {
-                col = new ColumnSchemaBuilder(colName, Type.INT32/*colType*/).build();
+                col = new ColumnSchemaBuilder(colName, colType).build();
                 columns.add(col);
             }
         }
         Schema schema = new Schema(columns);
-        if ( ! client.tableExists(tableName)) {
-            table = client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys).addHashPartitions(rangeKeys, 4));
-            logger.info("SUCCESS: The table has been created successfully");
-        } else {
-            logger.error("ERROR: The table already exists");
-        }
 
-        return table;
+        if(!client.tableExists(tableName))
+            client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys).addHashPartitions(rangeKeys, 4));
+        //logger.info("SUCCESS: The table has been created successfully");
+
+
+        return client.openTable(tableName);
     }
-
     /**
      * Delete the indicated table
      *
@@ -223,8 +201,10 @@ public class Utils {
 
         logger.info("Deleting the table \"" + tableName + "\"...");
         try {
-            client.deleteTable(tableName);
-            logger.info("SUCCESS: Table deleted successfully");
+            if(client.tableExists(tableName)) {
+                client.deleteTable(tableName);
+                logger.info("SUCCESS: Table deleted successfully");
+            }
         } catch (KuduException e) {
             logger.error("The table \"" + tableName  +"\" doesn't exist, so can't be deleted.", e);
         }
