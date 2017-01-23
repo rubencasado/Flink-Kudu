@@ -1,8 +1,12 @@
 package es.accenture.flink.Sink;
 
+import es.accenture.flink.Utils.Exceptions.KuduClientException;
+import es.accenture.flink.Utils.Exceptions.KuduTableException;
+import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import es.accenture.flink.Utils.Utils;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduTable;
 import org.apache.log4j.Logger;
 
@@ -30,7 +34,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * @param tableName     Kudu table name
      * @param fieldsNames   List of column names in the table to be created
      */
-    public KuduSink (String host, String tableName, String [] fieldsNames){
+    public KuduSink (String host, String tableName, String [] fieldsNames) throws KuduClientException, KuduException, KuduTableException {
 
         if (host == null || host.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"host\" not valid (null or empty)");
@@ -40,7 +44,17 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
 
         }
         this.host = host;
+        this.utils = new Utils(host);
         this.tableName = tableName;
+        if(utils.getClient().tableExists(tableName)){
+            this.table = utils.useTable(tableName, ModeType.APPEND);
+            if(fieldsNames == null || fieldsNames.length == 0){
+                fieldsNames = utils.getNamesOfColumns(table);
+            } else {
+                // When column names provided, and table exists, must check if column names match
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            }
+        }
         this.fieldsNames = fieldsNames;
     }
 
@@ -50,7 +64,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * @param host          Kudu host
      * @param tableName     Kudu table name
      */
-    public KuduSink (String host, String tableName){
+    public KuduSink (String host, String tableName) throws KuduClientException, KuduException, KuduTableException {
 
         if (host == null || host.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"host\" not valid (null or empty)");
@@ -59,7 +73,17 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
             throw new IllegalArgumentException("ERROR: Param \"tableName\" not valid (null or empty)");
         }
         this.host = host;
+        this.utils = new Utils(host);
         this.tableName = tableName;
+        if(utils.getClient().tableExists(tableName)){
+            this.table = utils.useTable(tableName, ModeType.APPEND);
+            if(fieldsNames == null || fieldsNames.length == 0){
+                fieldsNames = utils.getNamesOfColumns(table);
+            } else {
+                // When column names provided, and table exists, must check if column names match
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            }
+        }
     }
 
     /**
@@ -71,23 +95,22 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
     @Override
     public void invoke(RowSerializable row) throws IOException {
 
-        // Establish connection with Kudu
-        this.utils = new Utils(host);
-
-        // Look at the situation of the table (exist or not). Depending of the mode, the table is created or opened
-        this.table = utils.useTable(tableName, fieldsNames, row);
-
-        if(fieldsNames == null || fieldsNames.length == 0){
-            fieldsNames = utils.getNamesOfColumns(table);
-        } else {
-            // When column names provided, and table exists, must check if column names match
-            utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+        //If table does not exists, it is created
+        if(this.utils.getClient().tableExists(tableName)) {
+            this.table = utils.useTable(tableName, fieldsNames, row);
+            if(fieldsNames == null || fieldsNames.length == 0){
+                fieldsNames = utils.getNamesOfColumns(table);
+            } else {
+                // When column names provided, and table exists, must check if column names match
+                utils.checkNamesOfColumns(utils.getNamesOfColumns(table), fieldsNames);
+            }
         }
+
 
         // Make the insert into the table
         utils.insert(table, row, fieldsNames);
 
-        utils.getClient().close();
+        //utils.getClient().close();
         logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 }

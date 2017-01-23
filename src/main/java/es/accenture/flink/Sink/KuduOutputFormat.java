@@ -30,7 +30,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
     //LOG4J
     final static Logger logger = Logger.getLogger(KuduOutputFormat.class);
-
+    private static final Object lock = new Object();
     /**
      * Builder to use when you want to create a new table
      *
@@ -139,18 +139,29 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      */
     @Override
     public void writeRecord(RowSerializable row) throws IOException {
+         if(tableMode==CREATE){
+            if (!utils.getClient().tableExists(tableName)) {
+                createTable(utils, tableName, fieldsNames, row);
+            }else{
+                this.table = utils.getClient().openTable(tableName);
+            }
+        }
+        if(table!=null)
+            utils.insert(table, row, fieldsNames);
+        //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
+    }
 
-        if((tableMode== CREATE) && (!utils.getClient().tableExists(tableName))) {
-            this.table = utils.useTable(tableName, fieldsNames, row);
-            if(fieldsNames == null || fieldsNames.length == 0){
-                fieldsNames = utils.getNamesOfColumns(table);
-            } else {
-                // When column names provided, and table exists, must check if column names match
-                utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
+    public synchronized void createTable(Utils utils, String tableName, String[] fieldsNames, RowSerializable row) throws KuduException, KuduTableException {
+        synchronized (lock){
+               this.table = utils.useTable(tableName, fieldsNames, row);
+               if(fieldsNames == null || fieldsNames.length == 0){
+                    this.fieldsNames = utils.getNamesOfColumns(table);
+               } else {
+                    // When column names provided, and table exists, must check if column names match
+                    utils.checkNamesOfColumns(utils.getNamesOfColumns(this.table), fieldsNames);
+               }
             }
         }
 
-        utils.insert(table, row, fieldsNames);
-        //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
-    }
 }
+

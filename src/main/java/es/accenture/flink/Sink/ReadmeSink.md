@@ -1,2 +1,0 @@
-Documentación Sink
-
