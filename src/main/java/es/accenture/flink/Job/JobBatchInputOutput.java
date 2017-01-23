@@ -29,11 +29,10 @@ public class JobBatchInputOutput {
 
         /********Only for test, delete once finished*******/
         args[0]="Table_1";
-        args[1]="Table_40";
-        args[2]="Create";
+        args[1]="Table_7";
+        args[2]="create";
         args[3]="localhost";
         /**************************************************/
-
 
         System.out.println("-----------------------------------------------");
         System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
@@ -87,14 +86,9 @@ public class JobBatchInputOutput {
         DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
 
-        if(MODE == CREATE) {
-            /*Warning: If create mode is selected and the table exists, program will change mode to append with parallelism = 1.
-            *           change mode to append in params in order to properly parallel the sink*/
-            input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE))
-                    .setParallelism(1);
-        } else {
-            input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE));
-        }
+
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE));
+
 
         env.execute();
 
