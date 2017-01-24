@@ -1,20 +1,13 @@
 package es.accenture.flink.Job;
 
+
 import es.accenture.flink.Sink.KuduOutputFormat;
 import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-
-
-import java.util.Scanner;
-
-import static es.accenture.flink.Utils.ModeType.APPEND;
-import static es.accenture.flink.Utils.ModeType.CREATE;
-import static es.accenture.flink.Utils.ModeType.OVERRIDE;
 
 /**
  * Created by dani on 14/12/16.
@@ -29,8 +22,8 @@ public class JobBatchInputOutput {
 
         /********Only for test, delete once finished*******/
         args[0]="Table_1";
-        args[1]="Table_7";
-        args[2]="create";
+        args[1]="Table_2";
+        args[2]="append";
         args[3]="localhost";
         /**************************************************/
 
@@ -41,34 +34,24 @@ public class JobBatchInputOutput {
         System.out.println("-----------------------------------------------\n");
 
         if(args.length!=4){
-            System.out.println("PARAM ERROR: 4 params required but " + args.length + " given");
-            System.out.println( "Run program with arguments: [TableRead] [TableWrite] [Mode] [Master Adress]\n" +
-                    "- TableToRead: Name of the table to read.\n" +
-                    "- TableToWrite: Name of the table to write.\n" +
-                    "- Mode:  'Create'      If 'TableToWrite' does not exist. It is created and filled with the information.\n" +
-                    "         'Append'      Adds rows to the existing Kudu Database 'TableToWrite'.\n" +
-                    "         'Override'    Clear the given table 'TableToWrite' and appends it rows.\n" +
-                    "- Master Address: RPC Address for Master consensus-configuration (For example: localhost)\n");
+            System.out.println( "JobBatchInputOutput params: [TableReadName] [TableWriteName] [Mode] [Kudu Master Adress]\n");
             return;
         }
 
         final String TABLE_NAME = args[0];
         final String TABLE_NAME2 = args[1];
-        final ModeType MODE;
+        final Integer MODE;
         if (args[2].equalsIgnoreCase("create")){
-            MODE = CREATE;
+            MODE = KuduOutputFormat.CREATE;
         }else if (args[2].equalsIgnoreCase("append")){
-            MODE = APPEND;
+            MODE = KuduOutputFormat.APPEND;
         } else if (args[2].equalsIgnoreCase("override")){
-            MODE = OVERRIDE;
+            MODE = KuduOutputFormat.OVERRIDE;
         } else{
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;
         }
         final String KUDU_MASTER = args[3];
-
-
-
         long startTime = System.currentTimeMillis();
 
         KuduInputFormat KuduInputTest = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);

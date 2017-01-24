@@ -1,13 +1,11 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduOutputFormat;
-import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
-import static es.accenture.flink.Utils.ModeType.CREATE;
 
 /**
  * Created by dani on 9/12/16.
@@ -32,25 +30,18 @@ public class JobBatchSink {
         System.out.println("-----------------------------------------------");
 
         if(args.length!=3){
-            System.out.println("PARAM ERROR: 3 params required but " + args.length + " given");
-            System.out.println( "Run program with arguments: [TableWrite] [Mode] [Master Adress]\n" +
-                    "- TableToWrite: Name of the table to write.\n" +
-                    "- Mode:  'Create'      If 'TableToWrite' does not exist. It is created and filled with the information.\n" +
-                    "         'Append'      Adds rows to the existing Kudu Database 'TableToWrite'.\n" +
-                    "         'Override'    Clear the given table 'TableToWrite' and appends it rows.\n" +
-                    "- Master Address: RPC Address for Master consensus-configuration (For example: localhost)\n");
-
+            System.out.println( "JobBatchSink params: [TableWrite] [Mode] [Master Adress]\n");
             return;
         }
 
         final String TABLE_NAME = args[0];
-        final ModeType MODE;
+        final Integer MODE;
         if (args[1].equalsIgnoreCase("create")){
-            MODE = ModeType.CREATE;
+            MODE = KuduOutputFormat.CREATE;
         }else if (args[1].equalsIgnoreCase("append")){
-            MODE = ModeType.APPEND;
+            MODE = KuduOutputFormat.APPEND;
         } else if (args[1].equalsIgnoreCase("override")){
-            MODE = ModeType.OVERRIDE;
+            MODE = KuduOutputFormat.OVERRIDE;
         } else{
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;

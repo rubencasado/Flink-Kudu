@@ -61,7 +61,6 @@ public class KuduTypeInformation extends TypeInformation{
             TypeSerializer[] fieldSers;
             fieldSers = new TypeSerializer[this.arity];
             for (int i=0; i<this.arity; i++) {
-                System.out.println(i);
                 fieldSers[i] = this.fieldTypes[i].createSerializer(executionConfig);
             }
             return new KuduSerializer(fieldSers);

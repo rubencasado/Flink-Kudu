@@ -1,13 +1,14 @@
 package es.accenture.flink.Job;
 
+import es.accenture.flink.Sink.KuduOutputFormat;
 import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.log4j.Logger;
+import scala.Int;
 
 import java.io.File;
 
@@ -34,35 +35,23 @@ public class JobSource {
         System.out.println("-----------------------------------------------");
 
         if(args.length!=2){
-            System.out.println("PARAM ERROR: 2 params required but " + args.length + " given");
-            System.out.println( "Run program with arguments: [TableRead] [TableWrite] [Mode] [Master Adress]\n" +
-                    "- TableToRead: Name of the table to read.\n" +
-                    "- TableToWrite: Name of the table to write.\n" +
-                    "- Mode:  'Create'      If 'TableToWrite' does not exist. It is created and filled with the information.\n" +
-                    "         'Append'      Adds rows to the existing Kudu Database 'TableToWrite'.\n" +
-                    "         'Override'    Clear the given table 'TableToWrite' and appends it rows.\n" +
-                    "- Master Address: RPC Address for Master consensus-configuration (For example: localhost)\n");
-
+            System.out.println( "JobSource params: [TableRead] [Master Adress]\n");
             return;
         }
 
         final String TABLE_NAME = args[0];
-        final ModeType MODE;
+        final Integer MODE;
         if (args[1].equalsIgnoreCase("create")){
-            MODE = ModeType.CREATE;
+            MODE = KuduOutputFormat.CREATE;
         }else if (args[1].equalsIgnoreCase("append")){
-            MODE = ModeType.APPEND;
+            MODE = KuduOutputFormat.APPEND;
         } else if (args[1].equalsIgnoreCase("override")){
-            MODE = ModeType.OVERRIDE;
+            MODE = KuduOutputFormat.OVERRIDE;
         } else{
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;
         }
         final String KUDU_MASTER = args[2];
-
-
-
-
 
 
         KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);

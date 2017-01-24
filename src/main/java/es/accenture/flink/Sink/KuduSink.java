@@ -2,7 +2,6 @@ package es.accenture.flink.Sink;
 
 import es.accenture.flink.Utils.Exceptions.KuduClientException;
 import es.accenture.flink.Utils.Exceptions.KuduTableException;
-import es.accenture.flink.Utils.ModeType;
 import es.accenture.flink.Utils.RowSerializable;
 import es.accenture.flink.Utils.Utils;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
@@ -47,7 +46,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
         this.utils = new Utils(host);
         this.tableName = tableName;
         if(utils.getClient().tableExists(tableName)){
-            this.table = utils.useTable(tableName, ModeType.APPEND);
+            this.table = utils.useTable(tableName, KuduOutputFormat.APPEND);
             if(fieldsNames == null || fieldsNames.length == 0){
                 fieldsNames = utils.getNamesOfColumns(table);
             } else {
@@ -76,7 +75,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
         this.utils = new Utils(host);
         this.tableName = tableName;
         if(utils.getClient().tableExists(tableName)){
-            this.table = utils.useTable(tableName, ModeType.APPEND);
+            this.table = utils.useTable(tableName, KuduOutputFormat.APPEND);
             if(fieldsNames == null || fieldsNames.length == 0){
                 fieldsNames = utils.getNamesOfColumns(table);
             } else {
