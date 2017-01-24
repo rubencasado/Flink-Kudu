@@ -1,5 +1,6 @@
 package es.accenture.flink.Utils;
 
+import es.accenture.flink.Sink.KuduOutputFormat;
 import es.accenture.flink.Utils.Exceptions.KuduClientException;
 import es.accenture.flink.Utils.Exceptions.KuduTableException;
 import org.apache.kudu.ColumnSchema;
@@ -11,8 +12,7 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static es.accenture.flink.Utils.ModeType.CREATE;
+import es.accenture.flink.Sink.KuduOutputFormat;
 
 /**
  * Created by sshvayka on 21/11/16.
@@ -72,46 +72,41 @@ public class Utils {
      * @throws KuduTableException   In case of can't access to a table o can't create it (wrong params or not existing table)
      * @throws KuduException        In case of error of Kudu
      */
-    public KuduTable useTable(String tableName, ModeType tableMode) throws KuduTableException, KuduException {
+    public KuduTable useTable(String tableName, Integer tableMode) throws KuduTableException, KuduException {
         KuduTable table;
 
-        switch(tableMode){
-            case CREATE:
-                logger.error("Bad call method, use useTable(String tableName, String [] fieldsNames, RowSerializable row) instead");
-                table = null;
-                break;
-            case APPEND:
-                logger.info("Modo APPEND");
-                try{
-                    if (client.tableExists(tableName)){
-                        //logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
-                        table = client.openTable(tableName);
-                    } else{
-                        logger.error("ERROR: The table doesn't exist");
-                        throw new KuduTableException("ERROR: The table doesn't exist, so can't do APPEND operation");
-                    }
-                } catch (Exception e){
-                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
+        if (tableMode == KuduOutputFormat.CREATE) {
+            logger.error("Bad call method, use useTable(String tableName, String [] fieldsNames, RowSerializable row) instead");
+            table = null;;
+        }else if (tableMode == KuduOutputFormat.APPEND) {
+            logger.info("Modo APPEND");
+            try {
+                if (client.tableExists(tableName)) {
+                    //logger.info("SUCCESS: There is the table with the name \"" + tableName + "\"");
+                    table = client.openTable(tableName);
+                } else {
+                    logger.error("ERROR: The table doesn't exist");
+                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do APPEND operation");
                 }
-                break;
-
-            case OVERRIDE:
-                logger.info("Modo OVERRIDE");
-                try{
-                    if (client.tableExists(tableName)){
-                        logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
-                        clearTable(tableName);
-                        table = client.openTable(tableName);
-                    } else{
-                        logger.error("ERROR: The table doesn't exist");
-                        throw new KuduTableException("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
-                    }
-                } catch (Exception e){
-                    throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
+            } catch (Exception e) {
+                throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
+            }
+        }else if (tableMode == KuduOutputFormat.OVERRIDE) {
+            logger.info("Modo OVERRIDE");
+            try {
+                if (client.tableExists(tableName)) {
+                    logger.info("SUCCESS: There is the table with the name \"" + tableName + "\". Emptying the table");
+                    clearTable(tableName);
+                    table = client.openTable(tableName);
+                } else {
+                    logger.error("ERROR: The table doesn't exist");
+                    throw new KuduTableException("ERROR: The table doesn't exist, so can't do OVERRIDE operation");
                 }
-                break;
-            default:
-                throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableMode\" parameter.");
+            } catch (Exception e) {
+                throw new KuduTableException("ERROR: param \"host\" not valid, can't establish connection");
+            }
+        }else {
+            throw new KuduTableException("ERROR: Incorrect parameters, please check the constructor method. Incorrect \"tableMode\" parameter.");
         }
         return table;
     }
