@@ -5,19 +5,23 @@ import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.log4j.Logger;
 
 /**
- * Created by dani on 14/12/16.
+ * A job which reads a line of elements, split the line by spaces to generate the rows,
+ * and writes the result on another Kudu database using streaming functions.
+ * (This example split the line by spaces)
  */
 public class JobStreamingSink {
 
-    // LOG4J
-    final static Logger logger = Logger.getLogger(JobStreamingSink.class);
-
-    // Args[0] = sample
-    // Args[1] = localhost
     public static void main(String[] args) throws Exception {
+
+        //********Only for test, delete once finished*******
+        args[0] = "Table_5";
+        args[1] = "localhost";
+        //**************************************************
+
+        String tableName = args[0];
+        String KUDU_MASTER = args[1];
 
 
         String [] columnNames = new String[3];
@@ -29,21 +33,29 @@ public class JobStreamingSink {
 
         DataStream<String> stream = env.fromElements("field1 field2 field3");
 
-        DataStream<RowSerializable> stream2 = stream.map(new MapFunction<String, RowSerializable>() {
-            @Override
-            public RowSerializable map(String inputs) throws Exception {
-                RowSerializable r = new RowSerializable(3);
-                Integer i = 0;
-                for (String s : inputs.split(" ")) {
-                    r.setField(i, s);
-                    i++;
-                }
-                return r;
-            }
-        });
+        DataStream<RowSerializable> stream2 = stream.map(new MyMapFunction());
 
-        stream2.addSink(new KuduSink("localhost", "Table_5", columnNames));
+        stream2.addSink(new KuduSink(KUDU_MASTER, tableName, columnNames));
 
         env.execute();
     }
+
+
+    private static class MyMapFunction implements MapFunction<String, RowSerializable>{
+
+        @Override
+        public RowSerializable map(String input) throws Exception {
+
+            RowSerializable res = new RowSerializable(2);
+            Integer i = 0;
+            for (String s : input.split(" ")) {
+                res.setField(i, s);
+                i++;
+            }
+            return res;
+        }
+    }
+
+
+
 }

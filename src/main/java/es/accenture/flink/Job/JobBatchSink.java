@@ -8,18 +8,20 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 
 
 /**
- * Created by dani on 9/12/16.
+ * A job which reads a line of elements, split the line by spaces to generate the rows,
+ * and writes the result on another Kudu database.
+ * (This example split the line by spaces and concatenate string 'NEW' to each row)
  */
 public class JobBatchSink {
 
 
     public static void main(String[] args) throws Exception {
 
-        /********Only for test, delete once finished*******/
+        //********Only for test, delete once finished*******
         args[0]="Table_20";
         args[1]="Create";
         args[2]="localhost";
-        /**************************************************/
+        //**************************************************/
 
 
 
@@ -30,7 +32,7 @@ public class JobBatchSink {
         System.out.println("-----------------------------------------------");
 
         if(args.length!=3){
-            System.out.println( "JobBatchSink params: [TableWrite] [Mode] [Master Adress]\n");
+            System.out.println( "JobBatchSink params: [TableWrite] [Mode] [Master Address]\n");
             return;
         }
 

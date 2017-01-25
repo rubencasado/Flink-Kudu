@@ -6,9 +6,6 @@ import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 import java.io.IOException;
 
-/**
- * Created by luis on 14/12/16.
- */
 public class KuduSerializer extends TypeSerializer<RowSerializable> {
 
     private boolean[] nullMask;
