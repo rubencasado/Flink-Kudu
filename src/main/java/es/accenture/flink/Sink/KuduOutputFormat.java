@@ -12,9 +12,6 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 
 
-/**
- * Created by sshvayka on 21/11/16.
- */
 public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
     private String host, tableName;
@@ -32,7 +29,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
 
 
     //LOG4J
-    final static Logger logger = Logger.getLogger(KuduOutputFormat.class);
+    private final static Logger logger = Logger.getLogger(KuduOutputFormat.class);
     private static final Object lock = new Object();
     /**
      * Builder to use when you want to create a new table
@@ -139,8 +136,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * It's responsible to insert a row into the indicated table by the builder (Batch)
      *
      * @param row   Data of a row to insert
-     * @throws IOException
-     */
+     * */
     @Override
     public void writeRecord(RowSerializable row) throws IOException {
 
@@ -156,7 +152,7 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
         //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
     }
 
-    public synchronized void createTable(Utils utils, String tableName, String[] fieldsNames, RowSerializable row) throws KuduException, KuduTableException {
+    private synchronized void createTable(Utils utils, String tableName, String[] fieldsNames, RowSerializable row) throws KuduException, KuduTableException {
         synchronized (lock){
                this.table = utils.useTable(tableName, fieldsNames, row);
                if(fieldsNames == null || fieldsNames.length == 0){

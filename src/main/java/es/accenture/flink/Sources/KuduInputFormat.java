@@ -1,26 +1,12 @@
-/**
- *
- * Created by lballestin, danicoto & AlvaroVadillo on 23/11/16.
- */
-
 package es.accenture.flink.Sources;
 
 import es.accenture.flink.Utils.RowSerializable;
-
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
-import org.apache.flink.api.table.typeutils.RowSerializer;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
-import org.apache.kudu.ColumnSchema;
-import org.apache.kudu.Common;
-import org.apache.kudu.Schema;
 import org.apache.kudu.client.*;
-import org.apache.kudu.client.shaded.com.google.common.base.Splitter;
-import org.apache.kudu.client.shaded.com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

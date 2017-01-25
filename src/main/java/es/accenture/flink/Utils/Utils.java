@@ -12,11 +12,7 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import es.accenture.flink.Sink.KuduOutputFormat;
 
-/**
- * Created by sshvayka on 21/11/16.
- */
 public class Utils {
 
     //Kudu variables
@@ -24,7 +20,7 @@ public class Utils {
     private KuduSession session;
 
     // LOG4J
-    final static Logger logger = Logger.getLogger(Utils.class);
+    private final static Logger logger = Logger.getLogger(Utils.class);
 
     /**
      * Builder Util Class which creates a Kudu client and log in to be able to perform operations later

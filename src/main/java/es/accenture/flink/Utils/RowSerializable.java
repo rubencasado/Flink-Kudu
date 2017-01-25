@@ -1,12 +1,9 @@
 package es.accenture.flink.Utils;
 
-import org.apache.flink.api.table.Row;
 
 import java.io.Serializable;
 
-/**
- * Created by luis on 13/12/16.
- */
+
 public class RowSerializable implements Serializable {
     private static final long serialVersionUID = 1L;
     private Object[] fields2;
