@@ -39,10 +39,11 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 - [x] Sink implementation for Batch Processing and example job.
 - [x] Sink implementation for Streaming Processing and example job.
 - [x] Source implementation for Batch Processing and example job.
+- [x] Kafka integration in example job
 
 ### Working
 - [ ] Unit Tests for main classes.
-- [ ] Kafka integration in example job
+
 
 
 ## Requirements
@@ -50,7 +51,7 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 * Flink and Kudu compatible OS
 * Scala (version 2.12.1)
 * Apache Flink (version 1.1.3)
-* Apache Kudu (version 1.1.0)
+* Apache Kudu (version 1.2.0)
 * Apache Kafka (version 0.10.1.1)
 * Maven (version 3.3.9)
 * Java (version 8)
