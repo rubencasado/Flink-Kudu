@@ -94,4 +94,4 @@ For example:
 
 - [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): Saves data from a DataStream into a Kudu table (*DataStream API, Streaming Mode*). Input parameters: *table_name* and *host*.
 
-- [x] Useful functions examples: There are some useful classes in [github.com/AlvaroVadillo/KuduUsefulFunctions](https://github.com/AlvaroVadillo/KuduUsefulFunctions). This github contains classes to Create, Delete, Insert and Scan data of a Kudu database
+- [x] Useful functions examples: There are some useful classes in [github.com/AlvaroVadillo/KuduUsefulFunctions](https://github.com/AlvaroVadillo/KuduUsefulFunctions/tree/master/src/main/java/org/kududb/examples/sample). This github contains classes to Create, Delete, Insert and Scan data of a Kudu database
