@@ -93,3 +93,5 @@ For example:
 - [x] JobStreamingInputOutput (**es.accenture.flink.Job.JobStreamingInputOutput**): Reads data from Kafka, executes some basic operations using DataStream API and saves results into a Kudu table (*DataStream API, Streaming Mode*).
 
 - [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): Saves data from a DataStream into a Kudu table (*DataStream API, Streaming Mode*). Input parameters: *table_name* and *host*.
+
+- [x] Useful functions examples: There are some useful classes in [Sites Using React](https://github.com/AlvaroVadillo/KuduUsefulFunctions). This github contains classes to Create, Delete, Insert and Scan data of a Kudu database
