@@ -21,7 +21,7 @@ public class JobBatchInputOutput {
         //********Only for test, delete once finished*******
         args[0]="Table_1";
         args[1]="Table_2";
-        args[2]="create";
+        args[2]="append";
         args[3]="localhost";
         //**************************************************
 
