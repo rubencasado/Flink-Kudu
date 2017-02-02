@@ -40,9 +40,11 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 - [x] Sink implementation for Streaming Processing and example job.
 - [x] Source implementation for Batch Processing and example job.
 - [x] Kafka integration in example job
+- [x] Unit Tests for Batch Processing.
+
 
 ### Working
-- [ ] Unit Tests for main classes.
+- [ ] Unit Tests for Streaming Processing.
 
 
 
@@ -94,4 +96,3 @@ For example:
 
 - [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): Saves data from a DataStream into a Kudu table (*DataStream API, Streaming Mode*). Input parameters: *table_name* and *host*.
 
-- [x] Useful functions examples: There are some useful classes in [github.com/AlvaroVadillo/KuduUsefulFunctions](https://github.com/AlvaroVadillo/KuduUsefulFunctions/tree/master/src/main/java/org/kududb/examples/sample). This github contains classes to Create, Delete, Insert and Scan data of a Kudu database
