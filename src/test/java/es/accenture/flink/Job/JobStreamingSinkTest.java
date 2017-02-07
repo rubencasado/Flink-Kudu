@@ -1,66 +1,61 @@
 package es.accenture.flink.Job;
 
-import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Sources.KuduInputSplit;
+import es.accenture.flink.Sink.KuduSink;
 import es.accenture.flink.Utils.RowSerializable;
-import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.kudu.client.KuduClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.Assert.*;
 
-/**
- * Created by jenni on 14/12/16.
- */
 public class JobStreamingSinkTest {
-    public String KUDU_MASTER;
-    public String TABLE_NAME;
-    public String [] columnNames;
-    public KuduInputFormat prueba;
-    public  DataStream<String> stream;
-    public KuduInputSplit a;
 
+    /*class vars*/
+    private String KUDU_MASTER;
+    private String TABLE_NAME;
+    private String [] columnNames = new String[2];
+    private KuduClient client;
+    private StreamExecutionEnvironment env;
 
-    @org.junit.Before
+    @Before
     public void setUp() throws Exception {
-        KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
-        TABLE_NAME = System.getProperty("tableName", "sample");
-        columnNames= new String[3];
+
+        TABLE_NAME = "TableSink";
+        KUDU_MASTER = "localhost";
         columnNames[0] = "key";
         columnNames[1] = "value";
-        columnNames[2] = "description";
-        prueba = new KuduInputFormat("Table_1", "localhost");
-        a = null;
+
+        client = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
+        env = StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStream<String> stream = env.fromElements("field1 field2");
+        DataStream<RowSerializable> stream2 = stream.map(new TestUtils.MyMapFunction2());
+        stream2.addSink(new KuduSink(KUDU_MASTER, TABLE_NAME, columnNames));
+
     }
 
-    @org.junit.After
+    @After
     public void tearDown() throws Exception {
-     //Assert.assertEquals();
+       if(client.tableExists(TABLE_NAME))
+           client.deleteTable(TABLE_NAME);
     }
 
-    @org.junit.Test
-    public void main() throws Exception {
 
-            prueba.configure(new Configuration());
-            prueba.open(a);
+    @Test
+    public void JobStreamingSinkTest() throws Exception {
 
-            final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        setUp();
 
-             stream = env.fromElements("fila100 value100 descripcion1000");
+        if(client.tableExists(TABLE_NAME))
+            client.deleteTable(TABLE_NAME);
+        assert !client.tableExists(TABLE_NAME): "JUnit error: Table already exists";
+        assert TestUtils.createTable(client,TABLE_NAME, "STRING");
+        env.execute();
+        assert TestUtils.numRows(client,TABLE_NAME) == 1;
+        assert TestUtils.scanRows(client, TABLE_NAME).contains("STRING key=FIELD1, STRING value=FIELD2"):"JUnit error: row not found";
 
-           /* DataStream<RowSerializable> stream2 = stream.map(new MapFunction<String, RowSerializable>() {
-                @Override
-                public RowSerializable map(String inputs) throws Exception {
-                    RowSerializable r = new RowSerializable(3);
-                    Integer i = 0;
-                    for (String s : inputs.split(" ")) {
-                        r.setField(i, s);
-                        i++;
-                    }
-                    return r;
-                }
-            });*/
+
     }
 
 }
