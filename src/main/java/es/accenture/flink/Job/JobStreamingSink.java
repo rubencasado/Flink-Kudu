@@ -6,6 +6,8 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.io.OutputStream;
+
 /**
  * A job which reads a line of elements, split the line by spaces to generate the rows,
  * and writes the result on another Kudu database using streaming functions.
@@ -16,13 +18,20 @@ public class JobStreamingSink {
     public static void main(String[] args) throws Exception {
 
         //********Only for test, delete once finished*******
-        args[0] = "Table_5";
+        args[0] = "TableSink";
         args[1] = "localhost";
         //**************************************************
 
+
+
+        if(args.length!=3){
+            System.out.println( "JobStreamingSink params: [TableToWrite] [Master Address]\n");
+            return;
+        }
+
+
         String tableName = args[0];
         String KUDU_MASTER = args[1];
-
 
         String [] columnNames = new String[3];
         columnNames[0] = "key";
@@ -46,10 +55,12 @@ public class JobStreamingSink {
         @Override
         public RowSerializable map(String input) throws Exception {
 
-            RowSerializable res = new RowSerializable(2);
+            RowSerializable res = new RowSerializable(3);
             Integer i = 0;
             for (String s : input.split(" ")) {
-                res.setField(i, s);
+                /*Needed to prevent exception on map function if phrase has more than 4 words*/
+                if(i<3)
+                    res.setField(i, s);
                 i++;
             }
             return res;

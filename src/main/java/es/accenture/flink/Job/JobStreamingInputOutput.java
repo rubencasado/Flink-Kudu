@@ -68,7 +68,9 @@ public class JobStreamingInputOutput {
             RowSerializable res = new RowSerializable(2);
             Integer i = 0;
             for (String s : input.split(" ")) {
-                res.setField(i, s);
+                /*Needed to prevent exception on map function if phrase has more than 3 words*/
+                if(i<2)
+                    res.setField(i, s);
                 i++;
             }
             return res;
