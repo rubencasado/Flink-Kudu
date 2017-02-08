@@ -41,10 +41,7 @@ stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
 - [x] Source implementation for Batch Processing and example job.
 - [x] Kafka integration in example job
 - [x] Unit Tests for Batch Processing.
-
-
-### Working
-- [ ] Unit Tests for Streaming Processing.
+- [x] Unit Tests for Streaming Processing.
 
 
 
