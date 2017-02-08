@@ -10,7 +10,7 @@ public class RowSerializable implements Serializable {
 
     /**
      * Creates an instance of RowSerializable
-     * @param arity
+     * @param arity Size of the row
      */
     public RowSerializable(int arity){
 
@@ -30,8 +30,8 @@ public class RowSerializable implements Serializable {
 
     /**
      * Inserts the "field" Object in the position "i".
-     * @param i
-     * @param field
+     * @param i index value
+     * @param field Object to write
      */
     public void setField(int i, Object field){
         this.fields2[i]=field;
@@ -39,7 +39,7 @@ public class RowSerializable implements Serializable {
 
     /**
      * returns the Object contained in the position "i" from the RowSerializable.
-     * @param i
+     * @param i index value
      * @return Object
      */
     public Object productElement(int i){

@@ -15,7 +15,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class JobBatchSinkTest {
 
     /*class vars*/
@@ -31,7 +30,11 @@ public class JobBatchSinkTest {
     private Integer MODE;
 
 
-
+    /**
+     * Function to set program's variables
+     *
+     * @throws Exception
+     */
     @Before
     public void setUp() throws Exception {
         KUDU_MASTER = System.getProperty("kuduMaster", "localhost");
@@ -47,6 +50,11 @@ public class JobBatchSinkTest {
 
     }
 
+    /**
+     * Function to delete tables once finished the test
+     *
+     * @throws Exception
+     */
     @After
     public void tearDown() throws Exception {
         for(int i = 1; i<=10; i++)
@@ -56,7 +64,11 @@ public class JobBatchSinkTest {
         client.close();
     }
 
-
+    /**
+     * Main function which tests the program
+     *
+     * @throws Exception
+     */
     @Test
     public void JobBatchSinkTest() throws Exception {
 
@@ -117,10 +129,15 @@ public class JobBatchSinkTest {
 
     }
 
+    /**
+     * Second setup used to change mode between CREATE, APPEND and OVERRIDE
+     * @param mode New mode
+     * @return False if there is any problem, True if not
+     */
     private boolean setup2(Integer mode) {
 
 
-        if (singleton == true) {
+        if (singleton) {
             KuduInputFormat KuduInputTest = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
             env = ExecutionEnvironment.getExecutionEnvironment();
             TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);

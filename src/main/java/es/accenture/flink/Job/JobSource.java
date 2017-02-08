@@ -9,6 +9,12 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.log4j.Logger;
 import java.io.File;
 
+
+/**
+ * A job which reads from a Kudu database, creates a dataset, makes some changes over the dataset,
+ * and writes the result on a text field. Number os files generated depends on number of cores on the cpu
+ * Path where the files will be created: tmp/test
+ */
 public class JobSource {
 
     private static final Logger LOG = Logger.getLogger(KuduInputFormat.class);
@@ -47,7 +53,7 @@ public class JobSource {
         DataSet<RowSerializable> sourceaux = source.map(new MyMapFunction());
 
 
-        if(!borrarFicheros()){
+        if(!deleteFiles()){
             LOG.error("Error deleting files, exiting.");
         }
         sourceaux.writeAsText("tmp/test");
@@ -56,8 +62,12 @@ public class JobSource {
     }
 
 
-
-    private static boolean borrarFicheros(){
+    /**
+     * Deletes all files existing on tmp/test
+     *
+     * @return True if files were deleted, False if not
+     */
+    private static boolean deleteFiles(){
         File dir = new File("tmp/test");
         File[] files = dir.listFiles();
         if (files!=null) {
@@ -70,6 +80,14 @@ public class JobSource {
         return dir.delete();
     }
 
+
+
+    /**
+     * Map function which receives a row and makes some changes. For example, multiplies the key field by 2
+     * and changes value field to upper case
+     *
+     * @return the RowSerializable generated
+     */
     private static class MyMapFunction implements MapFunction<RowSerializable, RowSerializable> {
 
         @Override

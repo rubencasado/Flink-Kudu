@@ -139,7 +139,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * Create an {@link KuduTable} instance and set it into this format
      */
 
-    public KuduTable createTable (String TABLE_NAME) {
+    private KuduTable createTable(String TABLE_NAME) {
 
         LOG.info("OPENTABLE");
         try {
@@ -164,9 +164,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         LOG.info("SPLIT "+split.getSplitNumber()+" PASANDO POR 5. OPEN");
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
-        }
-        if (split == null) {
-            throw new IOException("Input split is null!");
         }
 
         LOG.info("Opening split...");
@@ -285,18 +282,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         LOG.info("Created: " + splits.size() + " splits");
         return splits.toArray(new KuduInputSplit[0]);
     }
-/*
-    private void logSplitInfo(String action, LocatableInputSplit split) {
-
-        int splitId = split.getSplitNumber();
-        String splitStart = Bytes.toString(split.getStartRow());
-        String splitEnd = Bytes.toString(split.getEndRow());
-        String splitStartKey = splitStart.isEmpty() ? "-" : splitStart;
-        String splitStopKey = splitEnd.isEmpty() ? "-" : splitEnd;
-        String[] hostnames = split.getHostnames();
-        LOG.info("{} split (this={})[{}|{}|{}|{}]", action, this, splitId, hostnames, splitStartKey, splitStopKey);
-
-    }*/
 
     /**
      * Test if the given region is to be included in the InputSplit while splitting the regions of a table.
