@@ -73,7 +73,7 @@ public class Utils {
 
         if (tableMode == KuduOutputFormat.CREATE) {
             logger.error("Bad call method, use useTable(String tableName, String [] fieldsNames, RowSerializable row) instead");
-            table = null;;
+            table = null;
         }else if (tableMode == KuduOutputFormat.APPEND) {
             logger.info("Modo APPEND");
             try {

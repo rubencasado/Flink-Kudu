@@ -3,10 +3,6 @@ package es.accenture.flink.Sources;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.LocatableInputSplit;
 
-
-/**
- * Created by lballestin on 28/11/16.
- */
 public class KuduInputSplit extends LocatableInputSplit implements InputSplit  {
 
     private static final long serialVersionUID = 1L;
