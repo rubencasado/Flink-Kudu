@@ -3,10 +3,12 @@ package es.accenture.flink.Job;
 import es.accenture.flink.Sink.KuduOutputFormat;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Utils.RowSerializable;
+import es.accenture.flink.Utils.Utils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.kudu.client.KuduClient;
 
 /**
  * A job which reads from a Kudu database, creates a dataset, makes some changes over the dataset,
@@ -15,15 +17,14 @@ import org.apache.flink.api.java.ExecutionEnvironment;
  */
 public class JobBatchInputOutput {
 
-
     public static void main(String[] args) throws Exception {
 
-        //********Only for test, delete once finished*******
-        args[0]="Table_1";
-        args[1]="Table_2";
-        args[2]="append";
+        /********Only for test, delete once finished*******/
+        args[0]="Table1";
+        args[1]="Table2";
+        args[2]="create";
         args[3]="localhost";
-        //**************************************************
+        /**************************************************/
 
         System.out.println("-----------------------------------------------");
         System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
@@ -36,9 +37,10 @@ public class JobBatchInputOutput {
             return;
         }
 
-
-        final String TABLE_NAME = args[0];
-        final String TABLE_NAME2 = args[1];
+        String [] columnNames = new String[2];
+        columnNames[0] = "key";
+        columnNames[1] = "value";
+        final String TABLE_NAME2 = System.getProperty("tableName2", args[1]);
         final Integer MODE;
         if (args[2].equalsIgnoreCase("create")){
             MODE = KuduOutputFormat.CREATE;
@@ -50,17 +52,12 @@ public class JobBatchInputOutput {
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;
         }
-        final String KUDU_MASTER = args[3];
 
 
 
         long startTime = System.currentTimeMillis();
 
-        KuduInputFormat KuduInputTest = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
-
-        String [] columnNames = new String[2];
-        columnNames[0] = "key";
-        columnNames[1] = "value";
+        KuduInputFormat KuduInputTest = new KuduInputFormat(args[0], args[3]);
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
@@ -70,7 +67,7 @@ public class JobBatchInputOutput {
 
         DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_NAME2, columnNames, MODE));
+        input.output(new KuduOutputFormat(args[3], TABLE_NAME2, columnNames, MODE));
 
         env.execute();
 

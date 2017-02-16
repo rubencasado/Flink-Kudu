@@ -18,11 +18,11 @@ public class JobStreamingInputOutput {
 
     public static void main(String[] args) throws Exception {
 
-        //********Only for test, delete once finished*******
-        args[0] = "KafkaToTable" /*args[0]*/;
-        args[1] = "test" /*args[1]*/;
-        args[2] = "localhost" /*args[2]*/;
-        //**************************************************
+        /********Only for test, delete once finished*******
+        args[0] = "KafkaToTable";
+        args[1] = "test" args[1];
+        args[2] = "localhost";
+        **************************************************/
 
 
         if(args.length!=3){

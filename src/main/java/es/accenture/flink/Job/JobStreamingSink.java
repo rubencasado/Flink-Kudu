@@ -17,14 +17,14 @@ public class JobStreamingSink {
 
     public static void main(String[] args) throws Exception {
 
-        //********Only for test, delete once finished*******
-        args[0] = "TableSink";
+        /********Only for test, delete once finished*******
+        args[0] = "TableSink5";
         args[1] = "localhost";
-        //**************************************************
+        /**************************************************/
 
 
 
-        if(args.length!=3){
+        if(args.length!=2){
             System.out.println( "JobStreamingSink params: [TableToWrite] [Master Address]\n");
             return;
         }

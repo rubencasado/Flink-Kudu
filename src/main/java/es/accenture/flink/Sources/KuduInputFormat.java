@@ -18,8 +18,8 @@ import java.util.List;
  */
 public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSplit> {
 
-    private static String KUDU_MASTER;
-    private static String TABLE_NAME;
+    private String KUDU_MASTER;
+    private String TABLE_NAME;
 
     private transient KuduTable table = null;
     private transient KuduScanner scanner = null;
@@ -42,8 +42,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      */
     public KuduInputFormat(String tableName, String IP){
         LOG.info("1. CONSTRUCTOR");
-        KUDU_MASTER = System.getProperty("kuduMaster", IP);
-        TABLE_NAME = System.getProperty("tableName", tableName);
+        KUDU_MASTER = IP;
+        TABLE_NAME = tableName;
 
     }
 
@@ -126,13 +126,22 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     public void configure(Configuration parameters) {
         LOG.info("2. CONFIGURE");
         LOG.info("Initializing KUDU Configuration...");
-        this.client  = new KuduClient.KuduClientBuilder(KUDU_MASTER).build();
-        table = createTable(TABLE_NAME);
+
+        String kuduMaster = System.getProperty(
+                "kuduMaster", KUDU_MASTER);
+
+        this.client  = new KuduClient.KuduClientBuilder(kuduMaster).build();
+
+        String tablename = System.getProperty(
+                "tableName", TABLE_NAME);
+
+        table = createTable(tablename);
         if (table != null) {
             scanner = client.newScannerBuilder(table)
                     .setProjectedColumnNames(projectColumns)
                     .build();
         }
+
     }
 
     /**
@@ -142,6 +151,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     private KuduTable createTable(String TABLE_NAME) {
 
         LOG.info("OPENTABLE");
+
         try {
             table = client.openTable(TABLE_NAME);
         } catch (Exception e) {
@@ -160,6 +170,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
+
 
         LOG.info("SPLIT "+split.getSplitNumber()+" PASANDO POR 5. OPEN");
         if (table == null) {
