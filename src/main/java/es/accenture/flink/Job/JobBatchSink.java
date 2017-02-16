@@ -17,11 +17,11 @@ public class JobBatchSink {
 
     public static void main(String[] args) throws Exception {
 
-        //********Only for test, delete once finished*******
+        /********Only for test, delete once finished*******/
         args[0]="Table_20";
         args[1]="Create";
         args[2]="localhost";
-        //**************************************************/
+        /**************************************************/
 
 
 

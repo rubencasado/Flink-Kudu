@@ -21,10 +21,10 @@ public class JobSource {
 
     public static void main(String[] args) throws Exception {
 
-        //********Only for test, delete once finished*******
+        /********Only for test, delete once finished*******
         args[0]="Table_1";
         args[1]="localhost";
-        //**************************************************
+        **************************************************/
 
         System.out.println("-----------------------------------------------");
         System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
