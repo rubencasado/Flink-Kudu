@@ -20,44 +20,48 @@ public class JobBatchInputOutput {
     public static void main(String[] args) throws Exception {
 
         /********Only for test, delete once finished*******/
-        args[0]="Table1";
-        args[1]="Table2";
-        args[2]="create";
-        args[3]="localhost";
+        args[0] = "TableBatchSource";
+        args[1] = "TableBatchSink";
+        args[2] = "create";
+        args[3] = "localhost";
         /**************************************************/
 
-        System.out.println("-----------------------------------------------");
-        System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
-                            "2. Change field 'value' to uppercase.\n" +
-                            "3. Write back in a new Kudu DB (" + args[1] + ").");
-        System.out.println("-----------------------------------------------\n");
-
-        if(args.length!=4){
+        if(args.length != 4){
             System.out.println( "JobBatchInputOutput params: [TableReadName] [TableWriteName] [Mode] [Kudu Master Adress]\n");
             return;
         }
 
+        // Params of program
+        String tableSourceName = args[0];
+        String tableSinkName = args[1];
+        String mode = args[2];
+        String host = args[3];
+
+        System.out.println("-----------------------------------------------");
+        System.out.println("1. Read data from a Kudu DB (" + tableSourceName + ").\n" +
+                "2. Change field 'value' to uppercase.\n" +
+                "3. Write back in a new Kudu DB (" + tableSinkName + ").");
+        System.out.println("-----------------------------------------------\n");
+
         String [] columnNames = new String[2];
-        columnNames[0] = "key";
-        columnNames[1] = "value";
-        final String TABLE_NAME2 = System.getProperty("tableName2", args[1]);
+        columnNames[0] = "col1";
+        columnNames[1] = "col2";
+
         final Integer MODE;
-        if (args[2].equalsIgnoreCase("create")){
+        if (mode.equalsIgnoreCase("create")){
             MODE = KuduOutputFormat.CREATE;
-        }else if (args[2].equalsIgnoreCase("append")){
+        }else if (mode.equalsIgnoreCase("append")){
             MODE = KuduOutputFormat.APPEND;
-        } else if (args[2].equalsIgnoreCase("override")){
+        } else if (mode.equalsIgnoreCase("override")){
             MODE = KuduOutputFormat.OVERRIDE;
-        } else{
+        } else {
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;
         }
 
-
-
         long startTime = System.currentTimeMillis();
 
-        KuduInputFormat KuduInputTest = new KuduInputFormat(args[0], args[3]);
+        KuduInputFormat KuduInputTest = new KuduInputFormat(tableSourceName, host);
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
@@ -67,7 +71,7 @@ public class JobBatchInputOutput {
 
         DataSet<RowSerializable> input = source.map(new MyMapFunction());
 
-        input.output(new KuduOutputFormat(args[3], TABLE_NAME2, columnNames, MODE));
+        input.output(new KuduOutputFormat(host, tableSinkName, columnNames, MODE));
 
         env.execute();
 
@@ -75,8 +79,6 @@ public class JobBatchInputOutput {
 
         System.out.println("Program executed in " + (endTime - startTime)/1000 + " seconds");  //divide by 1000000 to get milliseconds.
     }
-
-
 
     /**
      * Map function which receives a row and makes some changes. For example, multiplies the key field by 2

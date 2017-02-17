@@ -241,29 +241,78 @@ public class Utils {
         String[] columnsNames = getNamesOfColumns(table);
         //The list return all rows
         List<RowSerializable> rowsList = new ArrayList<>();
+
+        int posRow = 0;
+        while (scanner.hasMoreRows()) {
+            for (RowResult row : scanner.nextRows()) { //Get the rows
+                RowSerializable rowToInsert = new RowSerializable(columnsNames.length);
+                for (String col : columnsNames) { //For each column, it's type determined and this is how to read it
+
+                    String colType = row.getColumnType(col).getName();
+                    switch (colType) {
+                        case "string":
+                            rowToInsert.setField(posRow, row.getString(col));
+                            posRow++;
+                            break;
+                        case "int32":
+                            rowToInsert.setField(posRow, row.getInt(col));
+                            posRow++;
+                            break;
+                        case "bool":
+                            rowToInsert.setField(posRow, row.getBoolean(col));
+                            posRow++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                rowsList.add(rowToInsert);
+                posRow = 0;
+            }
+        }
+        return rowsList;
+    }
+
+
+
+    /**
+     * Return a list with all rows of the indicated table
+     *
+     * @param tableName Table name to read
+     * @return          List of rows in the table(object Row)
+     * @throws KuduException
+     */
+    public String readTablePrint (String tableName) throws KuduException {
+
+        KuduTable table = client.openTable(tableName);
+        KuduScanner scanner = client.newScannerBuilder(table).build();
+        //Obtain the column name list
+        String[] columnsNames = getNamesOfColumns(table);
+        //The list return all rows
+        List<RowSerializable> rowsList = new ArrayList<>();
         String content = "The table contains:";
 
         int number = 1, posRow = 0;
         while (scanner.hasMoreRows()) {
             for (RowResult row : scanner.nextRows()) { //Get the rows
                 RowSerializable rowToInsert = new RowSerializable(columnsNames.length);
-                content += "\nRow " + number + ": \n";
+                content += "\nRow " + number + ": | ";
                 for (String col : columnsNames) { //For each column, it's type determined and this is how to read it
 
                     String colType = row.getColumnType(col).getName();
                     switch (colType) {
                         case "string":
-                            content += row.getString(col) + "|";
+                            content += row.getString(col) + " | ";
                             rowToInsert.setField(posRow, row.getString(col));
                             posRow++;
                             break;
                         case "int32":
-                            content += row.getInt(col) + "|";
+                            content += row.getInt(col) + " | ";
                             rowToInsert.setField(posRow, row.getInt(col));
                             posRow++;
                             break;
                         case "bool":
-                            content += row.getBoolean(col) + "|";
+                            content += row.getBoolean(col) + " | ";
                             rowToInsert.setField(posRow, row.getBoolean(col));
                             posRow++;
                             break;
@@ -276,8 +325,7 @@ public class Utils {
                 posRow = 0;
             }
         }
-//        logger.info(content);
-        return rowsList;
+        return content;
     }
 
     /**

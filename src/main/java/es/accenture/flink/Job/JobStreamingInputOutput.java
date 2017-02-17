@@ -18,25 +18,25 @@ public class JobStreamingInputOutput {
 
     public static void main(String[] args) throws Exception {
 
-        /********Only for test, delete once finished*******
-        args[0] = "KafkaToTable";
-        args[1] = "test" args[1];
+        /********Only for test, delete once finished*******/
+        args[0] = "TableKafka";
+        args[1] = "topicKudu";
         args[2] = "localhost";
-        **************************************************/
-
+        /**************************************************/
 
         if(args.length!=3){
             System.out.println( "JobStreamingInputOutput params: [TableToWrite] [Topic] [Master Address]\n");
             return;
         }
 
+        // Params of program
+        String tableName = args[0];
+        String topic = args[1];
+        String KUDU_MASTER = args[2];
 
-        String tableName = args[0] /*args[0]*/;
-        String topic = args[1] /*args[1]*/;
-        String KUDU_MASTER = args[2] /*args[2]*/;
         String [] columnNames = new String[2];
-        columnNames[0] = "key";
-        columnNames[1] = "value";
+        columnNames[0] = "col1";
+        columnNames[1] = "col2";
 
         UUID id = UUID.randomUUID();
 
@@ -76,23 +76,11 @@ public class JobStreamingInputOutput {
             RowSerializable res = new RowSerializable(2);
             Integer i = 0;
             for (String s : input.split(" ")) {
-                /*Needed to prevent exception on map function if phrase has more than 3 words*/
-                if(i<2)
-                    res.setField(i, s);
-
+                /* Needed to prevent exception on map function if phrase has more than 3 words */
+                if(i<2) res.setField(i, s);
                 i++;
             }
             return res;
         }
     }
-
-
-
-
 }
-
-
-
-
-
-
