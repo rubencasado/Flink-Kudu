@@ -16,7 +16,7 @@ public class ReadKuduTable {
 
         try {
             Utils utils = new Utils(host);
-            System.out.println(utils.readTablePrint(table));
+            utils.readTablePrint(table);
         } catch (KuduClientException e) {
             e.printStackTrace();
         } catch (KuduException e) {

@@ -282,50 +282,29 @@ public class Utils {
      * @return          List of rows in the table(object Row)
      * @throws KuduException
      */
-    public String readTablePrint (String tableName) throws KuduException {
-
+    public void readTablePrint (String tableName) throws KuduException {
         KuduTable table = client.openTable(tableName);
         KuduScanner scanner = client.newScannerBuilder(table).build();
-        //Obtain the column name list
-        String[] columnsNames = getNamesOfColumns(table);
-        //The list return all rows
-        List<RowSerializable> rowsList = new ArrayList<>();
-        String content = "The table contains:";
-
-        int number = 1, posRow = 0;
-        while (scanner.hasMoreRows()) {
-            for (RowResult row : scanner.nextRows()) { //Get the rows
-                RowSerializable rowToInsert = new RowSerializable(columnsNames.length);
-                content += "\nRow " + number + ": | ";
-                for (String col : columnsNames) { //For each column, it's type determined and this is how to read it
-
-                    String colType = row.getColumnType(col).getName();
-                    switch (colType) {
-                        case "string":
-                            content += row.getString(col) + " | ";
-                            rowToInsert.setField(posRow, row.getString(col));
-                            posRow++;
-                            break;
-                        case "int32":
-                            content += row.getInt(col) + " | ";
-                            rowToInsert.setField(posRow, row.getInt(col));
-                            posRow++;
-                            break;
-                        case "bool":
-                            content += row.getBoolean(col) + " | ";
-                            rowToInsert.setField(posRow, row.getBoolean(col));
-                            posRow++;
-                            break;
-                        default:
-                            break;
-                    }
+        int cont = 0;
+        try {
+            while (scanner.hasMoreRows()) {
+                RowResultIterator results = scanner.nextRows();
+                while (results.hasNext()) {
+                    RowResult result = results.next();
+                    System.out.println(result.rowToString());
+                    cont++;
                 }
-                rowsList.add(rowToInsert);
-                number++;
-                posRow = 0;
+            }
+            System.out.println("Number of rows: " + cont);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                client.shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        return content;
     }
 
     /**
