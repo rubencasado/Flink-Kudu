@@ -6,7 +6,6 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
-
 /**
  * A job which reads a line of elements, split the line by spaces to generate the rows,
  * and writes the result on another Kudu database.
@@ -14,22 +13,13 @@ import org.apache.flink.api.java.ExecutionEnvironment;
  */
 public class JobBatchSink {
 
-
     public static void main(String[] args) throws Exception {
 
         /********Only for test, delete once finished*******/
-        args[0]="Table_20";
-        args[1]="Create";
-        args[2]="localhost";
+        args[0] = "TableSink";
+        args[1] = "create";
+        args[2] = "localhost";
         /**************************************************/
-
-
-
-        System.out.println("-----------------------------------------------");
-        System.out.println("1. Creates a new data set from elements.\n" +
-                "2. Concat string 'NEW' to each field.\n" +
-                "3. Write back in a new Kudu DB (" + args[1] + ").");
-        System.out.println("-----------------------------------------------");
 
         if(args.length!=3){
             System.out.println( "JobBatchSink params: [TableWrite] [Mode] [Master Address]\n");
@@ -40,25 +30,31 @@ public class JobBatchSink {
         final Integer MODE;
         if (args[1].equalsIgnoreCase("create")){
             MODE = KuduOutputFormat.CREATE;
-        }else if (args[1].equalsIgnoreCase("append")){
+        } else if (args[1].equalsIgnoreCase("append")){
             MODE = KuduOutputFormat.APPEND;
         } else if (args[1].equalsIgnoreCase("override")){
             MODE = KuduOutputFormat.OVERRIDE;
-        } else{
+        } else {
             System.out.println("Error in param [Mode]. Only create, append or override allowed.");
             return;
         }
         final String KUDU_MASTER = args[2];
 
+        System.out.println("-----------------------------------------------");
+        System.out.println("1. Creates a new data set from elements.\n" +
+                "2. Concat string 'NEW' to each field.\n" +
+                "3. Write back in a new Kudu DB (" + args[1] + ").");
+        System.out.println("-----------------------------------------------");
 
+        // Schema of the table to create
         String[] columnNames = new String[3];
-        columnNames[0] = "key";
-        columnNames[1] = "value";
-        columnNames[2] = "description";
+        columnNames[0] = "col1";
+        columnNames[1] = "col2";
+        columnNames[2] = "col3";
 
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        DataSet<String> input = env.fromElements("fila100 value100 description100");
+        DataSet<String> input = env.fromElements("value1 value2 value3");
 
         DataSet<RowSerializable> out = input.map(new MyMapFunction());
 
@@ -81,7 +77,6 @@ public class JobBatchSink {
             RowSerializable r = new RowSerializable(3);
             Integer i = 0;
             for (String s : inputs.split(" ")) {
-
                 r.setField(i, s.concat("NEW"));
                 i++;
             }
@@ -90,6 +85,3 @@ public class JobBatchSink {
     }
 
 }
-
-
-

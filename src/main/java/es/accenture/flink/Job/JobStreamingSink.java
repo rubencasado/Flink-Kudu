@@ -17,26 +17,25 @@ public class JobStreamingSink {
 
     public static void main(String[] args) throws Exception {
 
-        /********Only for test, delete once finished*******
-        args[0] = "TableSink5";
+        /********Only for test, delete once finished*******/
+        args[0] = "TableStreamingSink";
         args[1] = "localhost";
         /**************************************************/
-
-
 
         if(args.length!=2){
             System.out.println( "JobStreamingSink params: [TableToWrite] [Master Address]\n");
             return;
         }
 
-
+        // Params of program
         String tableName = args[0];
         String KUDU_MASTER = args[1];
 
+        // Schema of the table to create
         String [] columnNames = new String[3];
-        columnNames[0] = "key";
-        columnNames[1] = "value";
-        columnNames[2] = "description";
+        columnNames[0] = "col1";
+        columnNames[1] = "col2";
+        columnNames[2] = "col3";
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -48,7 +47,6 @@ public class JobStreamingSink {
 
         env.execute();
     }
-
 
     /**
      * Map function which receives a String, splits it, and creates as many row as word has the string
@@ -66,14 +64,10 @@ public class JobStreamingSink {
             Integer i = 0;
             for (String s : input.split(" ")) {
                 /*Needed to prevent exception on map function if phrase has more than 4 words*/
-                if(i<3)
-                    res.setField(i, s);
+                if(i<3) res.setField(i, s);
                 i++;
             }
             return res;
         }
     }
-
-
-
 }

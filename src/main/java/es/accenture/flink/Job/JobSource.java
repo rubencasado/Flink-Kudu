@@ -9,7 +9,6 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.log4j.Logger;
 import java.io.File;
 
-
 /**
  * A job which reads from a Kudu database, creates a dataset, makes some changes over the dataset,
  * and writes the result on a text field. Number os files generated depends on number of cores on the cpu
@@ -21,18 +20,12 @@ public class JobSource {
 
     public static void main(String[] args) throws Exception {
 
-        /********Only for test, delete once finished*******
-        args[0]="Table_1";
-        args[1]="localhost";
-        **************************************************/
+        /********Only for test, delete once finished*******/
+        args[0] = "TableSource";
+        args[1] = "localhost";
+        /**************************************************/
 
-        System.out.println("-----------------------------------------------");
-        System.out.println("1. Read data from a Kudu DB (" + args[0] + ").\n" +
-                           "2. Can change rows' information using a Map Function (Not necessary)\n" +
-                            "3. Write data as text file.");
-        System.out.println("-----------------------------------------------");
-
-        if(args.length!=2){
+        if(args.length != 2){
             System.out.println( "JobSource params: [TableRead] [Master Adress]\n");
             return;
         }
@@ -40,6 +33,11 @@ public class JobSource {
         final String TABLE_NAME = args[0];
         final String KUDU_MASTER = args[1];
 
+        System.out.println("-----------------------------------------------");
+        System.out.println("1. Read data from a Kudu DB (" + TABLE_NAME + ").\n" +
+                "2. Can change rows' information using a Map Function (Not necessary)\n" +
+                "3. Write data as text file.");
+        System.out.println("-----------------------------------------------");
 
         KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
@@ -48,10 +46,8 @@ public class JobSource {
         TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
         DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
 
-
         /*Comment or uncomment to modify dataset using a map function*/
         DataSet<RowSerializable> sourceaux = source.map(new MyMapFunction());
-
 
         if(!deleteFiles()){
             LOG.error("Error deleting files, exiting.");
@@ -61,7 +57,6 @@ public class JobSource {
         LOG.info("Created files at: " + System.getProperty("user.dir") + "/tmp/test");
     }
 
-
     /**
      * Deletes all files existing on tmp/test
      *
@@ -70,7 +65,7 @@ public class JobSource {
     private static boolean deleteFiles(){
         File dir = new File("tmp/test");
         File[] files = dir.listFiles();
-        if (files!=null) {
+        if (files != null) {
             for (File file : files) {
                 if(!file.delete()){
                     return false;
