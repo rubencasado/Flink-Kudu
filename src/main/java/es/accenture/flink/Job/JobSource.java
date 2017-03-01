@@ -1,5 +1,6 @@
 package es.accenture.flink.Job;
 
+import es.accenture.flink.Sources.KuduInputBuilder;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Utils.RowSerializable;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -39,21 +40,17 @@ public class JobSource {
                 "3. Write data as text file.");
         System.out.println("-----------------------------------------------");
 
-        KuduInputFormat prueba = new KuduInputFormat(TABLE_NAME, KUDU_MASTER);
 
-        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-
-        TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
-        DataSet<RowSerializable> source = env.createInput(prueba, typeInformation);
-
-        /*Comment or uncomment to modify dataset using a map function*/
-        DataSet<RowSerializable> sourceaux = source.map(new MyMapFunction());
+        DataSet<RowSerializable> sourceaux = KuduInputBuilder.build(TABLE_NAME, KUDU_MASTER)
+                .map(new MyMapFunction());
 
         if(!deleteFiles()){
             LOG.error("Error deleting files, exiting.");
         }
         sourceaux.writeAsText("tmp/test");
-        env.execute();
+
+        KuduInputBuilder.env.execute();
+
         LOG.info("Created files at: " + System.getProperty("user.dir") + "/tmp/test");
     }
 

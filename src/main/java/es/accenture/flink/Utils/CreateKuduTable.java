@@ -9,9 +9,7 @@ import org.apache.kudu.client.KuduClient;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by sergiy on 17/02/17.
- */
+
 public class CreateKuduTable {
 
     public static void main(String[] args) {

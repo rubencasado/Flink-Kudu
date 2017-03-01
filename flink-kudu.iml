@@ -28,6 +28,40 @@
     </orderEntry>
     <orderEntry type="library" name="Maven: org.apache.kudu:kudu-client:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.kudu:interface-annotations:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-java:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-core:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-annotations:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-metrics-core:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: commons-collections:commons-collections:3.2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.avro:avro:1.7.7" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-shaded-hadoop2:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:force-shading:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-streaming-java_2.10:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-runtime_2.10:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-actor_2.10:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-remote_2.10:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-slf4j_2.10:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.7.4" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.7.4" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-clients_2.10:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-optimizer_2.10:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-table_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-streaming-scala_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-streaming-java_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-runtime_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-actor_2.11:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-remote_2.11:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: com.data-artisans:flakka-slf4j_2.11:2.3-custom" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-clients_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-optimizer_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-scala_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.janino:janino:3.0.6" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.janino:commons-compiler:3.0.6" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-connector-kafka-0.9_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.flink:flink-connector-kafka-base_2.11:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kudu:kudu-client:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kudu:interface-annotations:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.stumbleupon:async:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: org.apache.flink:flink-java:1.2.0" level="project" />
