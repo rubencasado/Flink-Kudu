@@ -2,9 +2,7 @@ package es.accenture.flink.Utils;
 
 import org.apache.kudu.client.KuduClient;
 
-/**
- * Created by sergiy on 17/02/17.
- */
+
 public class DeleteKuduTable {
 
     public static void main(String[] args) {

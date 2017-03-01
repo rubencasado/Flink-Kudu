@@ -1,6 +1,7 @@
 package es.accenture.flink.Job;
 
 import es.accenture.flink.Sink.KuduOutputFormat;
+import es.accenture.flink.Sources.KuduInputBuilder;
 import es.accenture.flink.Sources.KuduInputFormat;
 import es.accenture.flink.Utils.RowSerializable;
 import es.accenture.flink.Utils.Utils;
@@ -32,15 +33,15 @@ public class JobBatchInputOutput {
         }
 
         // Params of program
-        String tableSourceName = args[0];
-        String tableSinkName = args[1];
+        String TABLE_SOURCE = args[0];
+        String TABLE_SINK = args[1];
         String mode = args[2];
-        String host = args[3];
+        String KUDU_MASTER = args[3];
 
         System.out.println("-----------------------------------------------");
-        System.out.println("1. Read data from a Kudu DB (" + tableSourceName + ").\n" +
+        System.out.println("1. Read data from a Kudu DB (" + TABLE_SOURCE + ").\n" +
                 "2. Change field 'value' to uppercase.\n" +
-                "3. Write back in a new Kudu DB (" + tableSinkName + ").");
+                "3. Write back in a new Kudu DB (" + TABLE_SINK + ").");
         System.out.println("-----------------------------------------------\n");
 
         String [] columnNames = new String[2];
@@ -61,19 +62,12 @@ public class JobBatchInputOutput {
 
         long startTime = System.currentTimeMillis();
 
-        KuduInputFormat KuduInputTest = new KuduInputFormat(tableSourceName, host);
 
-        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        DataSet<RowSerializable> input = KuduInputBuilder.build(TABLE_SOURCE, KUDU_MASTER).map(new MyMapFunction());
 
-        TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, MODE));
 
-        DataSet<RowSerializable> source = env.createInput(KuduInputTest, typeInformation);
-
-        DataSet<RowSerializable> input = source.map(new MyMapFunction());
-
-        input.output(new KuduOutputFormat(host, tableSinkName, columnNames, MODE));
-
-        env.execute();
+        KuduInputBuilder.env.execute();
 
         long endTime = System.currentTimeMillis();
 

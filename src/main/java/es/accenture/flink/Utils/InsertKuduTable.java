@@ -2,9 +2,7 @@ package es.accenture.flink.Utils;
 
 import org.apache.kudu.client.*;
 
-/**
- * Created by sergiy on 17/02/17.
- */
+
 public class InsertKuduTable {
 
     public static void main(String[] args) {
@@ -25,7 +23,7 @@ public class InsertKuduTable {
             KuduTable table = client.openTable(tableName);
             KuduSession session = client.newSession();
             session.setFlushMode(SessionConfiguration.FlushMode.AUTO_FLUSH_BACKGROUND);
-            for (int i = 0; i < 1500000; i++) {
+            for (int i = 0; i < 10000; i++) {
                 Insert insert = table.newInsert();
                 PartialRow row = insert.getRow();
                 row.addInt(0, i);
