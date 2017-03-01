@@ -13,12 +13,12 @@ Data flows patterns:
 
 /* Batch mode */
 
-        DataSet<RowSerializable> input = KuduInputBuilder.build(TABLE_SOURCE, KUDU_MASTER)
+DataSet<RowSerializable> input = KuduInputBuilder.build(TABLE_SOURCE, KUDU_MASTER)
                 .map(new MyMapFunction());
 
-        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, KuduOutputFormat.CREATE));
+input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, KuduOutputFormat.CREATE));
 
-        KuduInputBuilder.env.execute();
+KuduInputBuilder.env.execute();
 
 ```
 
