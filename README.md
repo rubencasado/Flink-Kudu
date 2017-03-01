@@ -31,6 +31,8 @@ DataStream<String> stream = env.fromElements("data1 data2 data3");
 DataStream<RowSerializable> stream2 = stream.map(new MapToRowSerializable());
 
 stream2.addSink(new KuduSink(KUDU_MASTER, DEST_TABLE, columnNames));
+env.execute();
+
 
 ```
 
