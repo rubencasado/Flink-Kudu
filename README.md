@@ -12,14 +12,14 @@ Data flows patterns:
 ```java
 
 /* Batch mode */
-ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-KuduInputFormat ksource = new KuduInputFormat(SOURCE_TABLE, KUDU_MASTER);
-TypeInformation<RowSerializable> typeInformation = TypeInformation.of(RowSerializable.class);
+        DataSet<RowSerializable> input = KuduInputBuilder.build(TABLE_SOURCE, KUDU_MASTER)
+                .map(new MyMapFunction());
 
-DataSet<RowSerializable> input = env.createInput(ksource, typeInformation);
+        input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, KuduOutputFormat.CREATE));
 
-input.output(new KuduOutputFormat(KUDU_MASTER, DEST_TABLE, columnNames, KuduOutputFormat.CREATE));
+        KuduInputBuilder.env.execute();
+
 ```
 
 ```java
