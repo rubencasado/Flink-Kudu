@@ -1,5 +1,6 @@
 # Flink-Kudu
-This is a simple PoC for integrating Apache Kudu and Apache Flink. Main goal is to be able to read/write data from/to Kudu using the DataSet and DataStream APIs.
+Java library to integrate Apache Kudu and Apache Flink. Main goal is to be able to read/write data from/to Kudu using the DataSet and DataStream Flink's APIs.
+
 Data flows patterns:
 * Batch
   * Kudu -> DataSet\<RowSerializable\> -> Kudu
