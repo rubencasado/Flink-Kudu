@@ -11,12 +11,14 @@ Data flows patterns:
 
 ```java
 
-/* Batch mode */
+/* Batch mode - DataSet API -*/
 
 DataSet<RowSerializable> input = KuduInputBuilder.build(TABLE_SOURCE, KUDU_MASTER)
-                .map(new MyMapFunction());
+               
+// DataSet operations --> .map(), .filter(), reduce(), etc.
+//result = input.map(...)
 
-input.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, KuduOutputFormat.CREATE));
+result.output(new KuduOutputFormat(KUDU_MASTER, TABLE_SINK, columnNames, KuduOutputFormat.CREATE));
 
 KuduInputBuilder.env.execute();
 
@@ -24,7 +26,7 @@ KuduInputBuilder.env.execute();
 
 ```java
 
-/* Streaming mode */
+/* Streaming mode - DataSream API - */
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 DataStream<String> stream = env.fromElements("data1 data2 data3");
@@ -36,26 +38,17 @@ env.execute();
 
 ```
 
-## Work in Progress
-### Completed
-- [x] Sink implementation for Batch Processing and example job.
-- [x] Sink implementation for Streaming Processing and example job.
-- [x] Source implementation for Batch Processing and example job.
-- [x] Kafka integration in example job
-- [x] Unit Tests for Batch Processing.
-- [x] Unit Tests for Streaming Processing.
-
-
 
 ## Requirements
 
 * Flink and Kudu compatible OS
+* Java (version 8)
 * Scala (version 2.12.1)
 * Apache Flink (version 1.1.3)
 * Apache Kudu (version 1.2.0)
-* Apache Kafka (version 0.10.1.1)
-* Maven (version 3.3.9)
-* Java (version 8)
+* Apache Kafka (version 0.10.1.1) (only for streaming example)
+* Maven (version 3.3.9) (only for building)
+
 
 
 ## Build library
@@ -70,15 +63,15 @@ Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT
 
 ## Execution
 
-First of all, must start Flink Job Manager
+Start Flink Job Manager
 ```
 <Flink-installation-folder>/bin/start-local.sh
 ```
-Now we are able to submit the jobs.
+Submit the job
 ```
 <Flink-instalation-folder>/bin/flink run -c <Job-package-path> target/flink-kudu-1.0-SNAPSHOT.jar param1 param2 ...
 ```
-For example:
+Example:
 ```shell
 /opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE localhost
 ```
