@@ -62,6 +62,17 @@ mvn package -DskipTests
 ```
 Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT.jar*"
 
+## Maven dependency
+
+You can also add this connector as a maven dependency
+```
+<dependency>
+  <groupId>es.accenture</groupId>
+  <artifactId>flink-kudu-connector</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
 ## Execution
 
 Start Flink Job Manager
