@@ -18,6 +18,7 @@ public class InsertKuduTable {
         System.out.println("Program executed in " + (endTime - startTime)/1000 + " seconds");  //divide by 1000000 to get milliseconds.
     }
 
+
     private static void insertToKudu (KuduClient client, String tableName){
         try {
             KuduTable table = client.openTable(tableName);

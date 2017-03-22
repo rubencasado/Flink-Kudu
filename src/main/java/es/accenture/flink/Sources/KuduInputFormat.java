@@ -198,7 +198,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
     }
 
     /**
-     *
      * @return True if has reached the end, false if not
      */
     @Override
@@ -212,7 +211,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @return resRow; the next record from the iterator.
      */
     @Override
-    public RowSerializable nextRecord(RowSerializable reuse) throws IOException {
+    public RowSerializable nextRecord (RowSerializable reuse) throws IOException {
 
         if (scanner == null) {
             throw new IOException("No table scanner provided!");

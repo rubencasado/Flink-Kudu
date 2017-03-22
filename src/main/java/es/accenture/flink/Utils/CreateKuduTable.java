@@ -11,12 +11,10 @@ import java.util.List;
 
 
 public class CreateKuduTable {
-
     public static void main(String[] args) {
 
         String tableName = ""; // TODO insert table name
         String host = "localhost";
-
 
         KuduClient client = new KuduClient.KuduClientBuilder(host).build();
         try {

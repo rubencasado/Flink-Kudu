@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class JobStreamingSinkTest {
 
-    /*class vars*/
+
     private String KUDU_MASTER;
     private String TABLE_NAME;
     private String [] columnNames = new String[2];

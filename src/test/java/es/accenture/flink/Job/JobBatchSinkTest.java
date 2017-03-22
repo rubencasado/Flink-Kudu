@@ -32,8 +32,7 @@ public class JobBatchSinkTest {
 
     /**
      * Function to set program's variables
-     *
-     * @throws Exception
+     * @throws Exception excepcion
      */
     @Before
     public void setUp() throws Exception {
@@ -52,8 +51,7 @@ public class JobBatchSinkTest {
 
     /**
      * Function to delete tables once finished the test
-     *
-     * @throws Exception
+     * @throws Exception excepcion
      */
     @After
     public void tearDown() throws Exception {
@@ -66,8 +64,8 @@ public class JobBatchSinkTest {
 
     /**
      * Main function which tests the program
+     * @throws Exception excepcion
      *
-     * @throws Exception
      */
     @Test
     public void JobBatchSinkTest() throws Exception {
