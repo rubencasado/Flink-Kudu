@@ -19,6 +19,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
     private transient KuduTable table;
 
     // LOG4J
+
     private final static Logger logger = Logger.getLogger(KuduSink.class);
 
     /**
@@ -27,6 +28,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      * @param host          Kudu host
      * @param tableName     Kudu table name
      * @param fieldsNames   List of column names in the table to be created
+     * @throws KuduClientException In case of exception caused by Kudu Client
      */
     public KuduSink (String host, String tableName, String [] fieldsNames) throws KuduClientException {
 
@@ -47,6 +49,7 @@ public class KuduSink extends RichSinkFunction<RowSerializable>{
      *
      * @param host          Kudu host
      * @param tableName     Kudu table name
+     * @throws KuduClientException In case of exception caused by Kudu Client
      */
     public KuduSink (String host, String tableName) throws KuduClientException {
 

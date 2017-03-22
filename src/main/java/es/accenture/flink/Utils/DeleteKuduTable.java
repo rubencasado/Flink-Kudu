@@ -4,7 +4,6 @@ import org.apache.kudu.client.KuduClient;
 
 
 public class DeleteKuduTable {
-
     public static void main(String[] args) {
         String tableName = ""; // TODO insert table name
         String host = "localhost";

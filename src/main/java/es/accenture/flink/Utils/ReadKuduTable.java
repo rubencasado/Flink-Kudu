@@ -11,7 +11,6 @@ public class ReadKuduTable {
         String table = ""; // TODO insert table name
         String host = "localhost";
 
-
         try {
             Utils utils = new Utils(host);
             utils.readTablePrint(table);

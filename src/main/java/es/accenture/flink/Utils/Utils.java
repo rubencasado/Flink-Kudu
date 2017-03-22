@@ -25,9 +25,8 @@ public class Utils {
     /**
      * Builder Util Class which creates a Kudu client and log in to be able to perform operations later
      * @param host Kudu's host
-     * @throws NullPointerException when can't establish connection with Kudu
+     * @throws KuduClientException In case of exception caused by Kudu Client
      */
-
     public Utils(String host) throws KuduClientException {
         this.client = new KuduClient.KuduClientBuilder(host).build();
         if (client == null){
@@ -39,28 +38,26 @@ public class Utils {
     /**
      * Return an instance of the table indicated in the settings
      *
-     * <li> In case that the table exists, return an instance of the table </li>
-     * <li> In case that the table doesn't exist, create a new table with the data provided and return an instance </li>
-     * <li> In both cases,takes into account the way of the table to perfom some operations or others </li>
-     * <ul>
-     *     <li> If the mode is CREATE: </li>
-     *     <ul>
-     *         <li> If the table exists -> return error (Can not create table that already exists)</li>
-     *         <li> If the table doesn't exist and  the list of column names has not been provided-> return error </li>
-     *         <li> If the table doesn't exist and  the list of column names has been provided->create a new table with data provided and return an instance  </li>
-     *    </ul>
-     *    <li> If the mode is APPEND: </li>
-     *    <ul>
-     *        <li> If the table exists-> return the instance in the table </li>
-     *        <li> If the table doesn't exist -> return error </li>
-     *    </ul>
-     *    <li> If the mode is OVERRIDE: </li>
-     *    <ul>
-     *        <li> If the table exist-> delete all rows of this table and return an instance of it </li>
-     *        <li> If the table doesn't exist-< return error </li>
+     * In case that the table exists, return an instance of the table
+     * In case that the table doesn't exist, create a new table with the data provided and return an instance
+     * In both cases,takes into account the way of the table to perfom some operations or others
      *
-     *     </ul>
-     * </ul>
+     *     If the mode is CREATE:
+     *
+     *         If the table exists: return error (Can not create table that already exists)
+     *         If the table doesn't exist and  the list of column names has not been provided: return error
+     *         If the table doesn't exist and  the list of column names has been provided: create a new table with data provided and return an instance
+     *
+     *    If the mode is APPEND:
+     *
+     *        If the table exists: return the instance in the table
+     *        If the table doesn't exist: return error
+     *
+     *    If the mode is OVERRIDE:
+     *
+     *        If the table exist: delete all rows of this table and return an instance of it
+     *        If the table doesn't exist: return error
+     *
      *
      * @param tableName             Table name to use
      * @param tableMode             Operations mode for operate with the table (CREATE, APPEND, OVERRIDE)
@@ -109,14 +106,15 @@ public class Utils {
 
     /**
      * Returns an instance of the table requested in parameters
-     * <li> If the table exists, returns an instance of the table </li>
-     * <li> If the table doesn't exist, creates a new table with the data provided and returns an instance </li>
+     * If the table exists, returns an instance of the table
+     * If the table doesn't exist, creates a new table with the data provided and returns an instance
      *
      * @param tableName     Table name to use
      * @param fieldsNames   List of names of columns of the table (to create table)
      * @param row           List of values to insert a row in the table (to know the types of columns)
      * @return              Instance of the table indicated
-     * @throws Exception    In case of wrong parameters
+     * @throws IllegalArgumentException In case of wrong parameters
+     * @throws KuduException    In case of exception caused by Kudu
      */
     public KuduTable useTable(String tableName, String [] fieldsNames, RowSerializable row) throws IllegalArgumentException, KuduException {
         KuduTable table;
@@ -148,7 +146,7 @@ public class Utils {
      * @param fieldsNames   list name columns of the table
      * @param row           list of values to insert a row in the table( to know the types of columns)
      * @return              instance of the table indicated
-     * @throws KuduException
+     * @throws KuduException In case of exception caused by Kudu
      */
     public KuduTable createTable (String tableName, String [] fieldsNames, RowSerializable row) throws KuduException {
 
@@ -231,7 +229,7 @@ public class Utils {
      *
      * @param tableName Table name to read
      * @return          List of rows in the table(object Row)
-     * @throws KuduException
+     * @throws KuduException In case of exception caused by Kudu
      */
     public List<RowSerializable> readTable (String tableName) throws KuduException {
 
@@ -279,8 +277,7 @@ public class Utils {
      * Return a list with all rows of the indicated table
      *
      * @param tableName Table name to read
-     * @return          List of rows in the table(object Row)
-     * @throws KuduException
+     * @throws KuduException In case of exception caused by Kudu
      */
     public void readTablePrint (String tableName) throws KuduException {
         KuduTable table = client.openTable(tableName);
@@ -325,7 +322,7 @@ public class Utils {
      * Deelte all rows of the table until empty
      *
      * @param tableName  table name to empty
-     * @throws KuduException
+     * @throws KuduException In case of exception caused by Kudu
      */
     public void clearTable (String tableName) throws KuduException {
         KuduTable table = client.openTable(tableName);

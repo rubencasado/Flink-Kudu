@@ -38,7 +38,6 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param tableName   Kudu table name
      * @param fieldsNames List of column names in the table to be created
      * @param tableMode   Way to operate with table (CREATE, APPEND, OVERRIDE)
-     * @throws IllegalArgumentException when wrong params
      */
     public KuduOutputFormat(String host, String tableName, String[] fieldsNames, Integer tableMode) throws KuduException, KuduTableException, KuduClientException {
         if (tableMode == null || ((!tableMode.equals(CREATE)) && (!tableMode.equals(APPEND)) && (!tableMode.equals(OVERRIDE)))) {
@@ -71,7 +70,9 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
      * @param host      Kudu host
      * @param tableName Kudu table name to be used
      * @param tableMode Way to operate with table (CREATE, APPEND, OVERRIDE)
-     * @throws IllegalArgumentException when wrong params
+     * @throws KuduClientException In case of exception caused by Kudu Client
+     * @throws KuduTableException In case of exception caused by Kudu Tablet
+     * @throws KuduException In case of exception caused by Kudu
      */
     public KuduOutputFormat(String host, String tableName, Integer tableMode) throws KuduException, KuduTableException, KuduClientException {
         if (tableMode == null || ((!tableMode.equals(CREATE)) && (!tableMode.equals(APPEND)) && (!tableMode.equals(OVERRIDE)))) {

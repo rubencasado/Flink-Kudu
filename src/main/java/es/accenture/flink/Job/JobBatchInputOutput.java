@@ -13,8 +13,9 @@ import org.apache.kudu.client.KuduClient;
 
 /**
  * A job which reads from a Kudu database, creates a dataset, makes some changes over the dataset,
- * and writes the result on another Kudu database.
+ * and writes the result on another Kudu database
  * (This example multiply the field 'key' by 2 and transform the field 'value' to uppercase)
+ *
  */
 public class JobBatchInputOutput {
 
@@ -78,7 +79,6 @@ public class JobBatchInputOutput {
      * Map function which receives a row and makes some changes. For example, multiplies the key field by 2
      * and changes value field to upper case
      *
-     * @return the RowSerializable generated
      */
 
     private static class MyMapFunction implements MapFunction<RowSerializable, RowSerializable> {
