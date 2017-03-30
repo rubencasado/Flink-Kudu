@@ -62,17 +62,6 @@ env.execute();
 
 
 
-## Build library
-
-```shell
-git clone https://github.com/rubencasado/Flink-Kudu.git
-cd Flink-Kudu
-mvn clean install -DskipTests 
-mvn package -DskipTests
-```
-Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT.jar*"
-
-
 ## Execution
 
 Start Flink Job Manager
