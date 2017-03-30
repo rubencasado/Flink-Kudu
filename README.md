@@ -90,6 +90,8 @@ Example:
 
 **Included examples**
 
+Following examples are included in https://github.com/rubencasado/Flink-Kudu
+
 - [x] JobBatchSink (**es.accenture.flink.Job.JobBatchSink**): Saves data from a DataSet into a Kudu table(*DataSet API, Batch Mode*). Input parameters: *table_name*, *table_mode* (CREATE, APPEND or OVERRIDE) and *host*.
 
 - [x] JobSource (**es.accenture.flink.Job.JobSource**): Reads data from a Kudu table and prints the information (*DataSet API, Batch Mode*).
