@@ -13,11 +13,7 @@ public class RowSerializable implements Serializable {
      * @param arity Size of the row
      */
     public RowSerializable(int arity){
-
         this.fields2 = new Object[arity];
-    }
-    public RowSerializable(){
-
     }
 
     /**
