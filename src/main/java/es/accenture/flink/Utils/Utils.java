@@ -10,8 +10,7 @@ import org.apache.kudu.Type;
 import org.apache.kudu.client.*;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Utils {
 
@@ -207,21 +206,7 @@ public class Utils {
      * @return      element type "pos"-esimo of "row"
      */
     public Type getRowsPositionType (int pos, RowSerializable row){
-        Type colType = null;
-        switch(row.productElement(pos).getClass().getName()){
-            case "java.lang.String":
-                colType = Type.STRING;
-                break;
-            case "java.lang.Integer":
-                colType = Type.INT32;
-                break;
-            case "java.lang.Boolean":
-                colType = Type.BOOL;
-                break;
-            default:
-                break;
-        }
-        return colType;
+        return TableUtils.mapToType(row.productElement(pos).getClass());
     }
 
     /**
@@ -245,24 +230,8 @@ public class Utils {
             for (RowResult row : scanner.nextRows()) { //Get the rows
                 RowSerializable rowToInsert = new RowSerializable(columnsNames.length);
                 for (String col : columnsNames) { //For each column, it's type determined and this is how to read it
-
-                    String colType = row.getColumnType(col).getName();
-                    switch (colType) {
-                        case "string":
-                            rowToInsert.setField(posRow, row.getString(col));
-                            posRow++;
-                            break;
-                        case "int32":
-                            rowToInsert.setField(posRow, row.getInt(col));
-                            posRow++;
-                            break;
-                        case "bool":
-                            rowToInsert.setField(posRow, row.getBoolean(col));
-                            posRow++;
-                            break;
-                        default:
-                            break;
-                    }
+                    rowToInsert.setField(posRow, TableUtils.valueFromRow(row, col));
+                    posRow++;
                 }
                 rowsList.add(rowToInsert);
                 posRow = 0;
@@ -332,22 +301,9 @@ public class Utils {
         List<Delete> deletes = new ArrayList<>();
         for(RowSerializable row : rowsList){
             Delete d = table.newDelete();
-            switch(getRowsPositionType(0, row).getName()){
-                case "string":
-                    d.getRow().addString(primaryKey, (String) row.productElement(0));
-                    break;
-
-                case "int32":
-                    d.getRow().addInt(primaryKey, (Integer) row.productElement(0));
-                    break;
-
-                case "bool":
-                    d.getRow().addBoolean(primaryKey, (Boolean) row.productElement(0));
-                    break;
-
-                default:
-                    break;
-            }
+            Type type = getRowsPositionType(0, row);
+            PartialRow partialRow = d.getRow();
+            TableUtils.valueToRow(partialRow, type, primaryKey, row.productElement(0));
             deletes.add(d);
         }
         for(Delete d : deletes){
@@ -398,21 +354,10 @@ public class Utils {
         }
 
         for (int index = 0; index < row.productArity(); index++){
-
             //Create the insert with the previous data in function of the type ,a different "add"
-            switch(getRowsPositionType(index, row).getName()){
-                case "string":
-                    insert.getRow().addString(fieldsNames[index], (String)(row.productElement(index)));
-                    break;
-                case "int32":
-                    insert.getRow().addInt(fieldsNames[index], (Integer) row.productElement(index));
-                    break;
-                case "bool":
-                    insert.getRow().addBoolean(fieldsNames[index], (Boolean) row.productElement(index));
-                    break;
-                default:
-                    break;
-            }
+            Type type = getRowsPositionType(index, row);
+            PartialRow partialRow = insert.getRow();
+            TableUtils.valueToRow(partialRow, type, fieldsNames[index], row.productElement(index));
         }
         //When the Insert is complete, write it in the table
         session.apply(insert);
