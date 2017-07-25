@@ -1,9 +1,26 @@
-package es.accenture.flink.Sink;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import es.accenture.flink.Utils.Exceptions.KuduClientException;
-import es.accenture.flink.Utils.Exceptions.KuduTableException;
-import es.accenture.flink.Utils.RowSerializable;
-import es.accenture.flink.Utils.Utils;
+package org.apache.bahir.Sink;
+
+import org.apache.bahir.Utils.Exceptions.KuduClientException;
+import org.apache.bahir.Utils.Exceptions.KuduTableException;
+import org.apache.bahir.Utils.RowSerializable;
+import org.apache.bahir.Utils.Utils;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.kudu.client.*;
@@ -47,8 +64,9 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
             throw new IllegalArgumentException("ERROR: Param \"tableMode\" not valid (must be CREATE, APPEND or OVERRIDE)");
 
         } else if (tableMode.equals(CREATE)) {
-            if (fieldsNames == null || fieldsNames.length == 0)
+            if (fieldsNames == null || fieldsNames.length == 0){
                 throw new IllegalArgumentException("ERROR: Missing param \"fieldNames\". Can't create a table without column names");
+            }
 
         } else if (host == null || host.isEmpty()) {
             throw new IllegalArgumentException("ERROR: Param \"host\" not valid (null or empty)");
@@ -148,9 +166,9 @@ public class KuduOutputFormat extends RichOutputFormat<RowSerializable> {
                 this.table = utils.getClient().openTable(tableName);
             }
         }
-        if(table!=null)
+        if(table!=null){
             utils.insert(table, row, fieldsNames);
-        //logger.info("Inserted the Row: | " + utils.printRow(row) + "at the table \"" + this.tableName + "\"");
+        }
     }
 
     private synchronized void createTable(Utils utils, String tableName, String[] fieldsNames, RowSerializable row) throws KuduException, KuduTableException {

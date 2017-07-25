@@ -1,6 +1,23 @@
-package es.accenture.flink.Sources;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import es.accenture.flink.Utils.RowSerializable;
+package org.apache.bahir.Sources;
+
+import org.apache.bahir.Utils.RowSerializable;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
@@ -18,8 +35,8 @@ import java.util.List;
  */
 public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSplit> {
 
-    private String KUDU_MASTER;
-    private String TABLE_NAME;
+    private String kudu_master;
+    private String table_name;
 
     private transient KuduTable table = null;
     private transient KuduScanner scanner = null;
@@ -41,10 +58,8 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @param IP Kudu-master server's IP direction
      */
     public KuduInputFormat(String tableName, String IP){
-        LOG.info("1. CONSTRUCTOR");
-        KUDU_MASTER = IP;
-        TABLE_NAME = tableName;
-
+        kudu_master = IP;
+        table_name = tableName;
     }
 
     /**
@@ -61,7 +76,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @return The name of the table
      */
     public String getTableName(){
-        return TABLE_NAME;
+        return table_name;
     }
 
     /**
@@ -121,19 +136,18 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      * @param parameters The configuration that is to be used
      * @see Configuration
      */
-
     @Override
     public void configure(Configuration parameters) {
-        LOG.info("2. CONFIGURE");
+
         LOG.info("Initializing KUDU Configuration...");
 
         String kuduMaster = System.getProperty(
-                "kuduMaster", KUDU_MASTER);
+                "kuduMaster", kudu_master);
 
         this.client  = new KuduClient.KuduClientBuilder(kuduMaster).build();
 
         String tablename = System.getProperty(
-                "tableName", TABLE_NAME);
+                "tableName", table_name);
 
         table = createTable(tablename);
         if (table != null) {
@@ -149,8 +163,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      */
 
     private KuduTable createTable(String TABLE_NAME) {
-
-        LOG.info("OPENTABLE");
 
         try {
             table = client.openTable(TABLE_NAME);
@@ -170,9 +182,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
-
-
-        LOG.info("SPLIT "+split.getSplitNumber()+" PASANDO POR 5. OPEN");
         if (table == null) {
             throw new IOException("The Kudu table has not been opened!");
         }
@@ -187,12 +196,13 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
         endReached = false;
         scannedRows = 0;
 
+        LOG.info("SPLIT NUMBER "+split.getSplitNumber());
         try {
-            LOG.info("SPLIT NUMBER "+split.getSplitNumber());
             scanner = tokens.get(split.getSplitNumber()).intoScanner(client);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Error opening split", e);
         }
+
 
         results = scanner.nextRows();
     }
@@ -266,7 +276,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
      */
     @Override
     public KuduInputSplit[] createInputSplits(final int minNumSplits) {
-        LOG.info("3. CREATE SPLITS");
 
         KuduScanToken.KuduScanTokenBuilder builder = client.newScanTokenBuilder(this.table)
                 .setProjectedColumnNames(this.projectColumns);
@@ -286,7 +295,7 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
             }
             int numSplit = splits.size();
             KuduInputSplit split = new KuduInputSplit(numSplit, (locations.toArray(new String[locations.size()])),
-                    TABLE_NAME, startKey, endKey);
+                    table_name, startKey, endKey);
             splits.add(split);
         }
         LOG.info("Created: " + splits.size() + " splits");
@@ -314,7 +323,6 @@ public class KuduInputFormat implements InputFormat<RowSerializable, KuduInputSp
 
     @Override
     public InputSplitAssigner getInputSplitAssigner(KuduInputSplit[] inputSplits) {
-        LOG.info("4. ASSIGNER");
         return new LocatableInputSplitAssigner(inputSplits);
     }
 

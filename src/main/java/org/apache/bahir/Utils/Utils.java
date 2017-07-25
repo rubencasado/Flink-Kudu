@@ -1,8 +1,25 @@
-package es.accenture.flink.Utils;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import es.accenture.flink.Sink.KuduOutputFormat;
-import es.accenture.flink.Utils.Exceptions.KuduClientException;
-import es.accenture.flink.Utils.Exceptions.KuduTableException;
+package org.apache.bahir.Utils;
+
+import org.apache.bahir.Sink.KuduOutputFormat;
+import org.apache.bahir.Utils.Exceptions.KuduClientException;
+import org.apache.bahir.Utils.Exceptions.KuduTableException;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnSchema.ColumnSchemaBuilder;
 import org.apache.kudu.Schema;
@@ -173,10 +190,9 @@ public class Utils {
         }
         Schema schema = new Schema(columns);
 
-        if(!client.tableExists(tableName))
+        if(!client.tableExists(tableName)) {
             client.createTable(tableName, schema, new CreateTableOptions().setRangePartitionColumns(rangeKeys).addHashPartitions(rangeKeys, 4));
-        //logger.info("SUCCESS: The table has been created successfully");
-
+        }
 
         return client.openTable(tableName);
     }
@@ -263,12 +279,12 @@ public class Utils {
             }
             System.out.println("Number of rows: " + cont);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error while reading. Shutting down Kudu client.");
         } finally {
             try {
                 client.shutdown();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Error while shutting down Kudu client.");
             }
         }
     }
@@ -280,11 +296,11 @@ public class Utils {
      * @return      a string containing the data of the row indicated in the parameter
      */
     public String printRow (RowSerializable row){
-        String res = "";
+        StringBuilder sb = new StringBuilder(254);
         for(int i = 0; i< row.productArity(); i++){
-            res += (row.productElement(i) + " | ");
+            sb.append(row.productElement(i) + " | ");
         }
-        return res;
+        return sb.toString();
     }
 
     /**
@@ -347,11 +363,11 @@ public class Utils {
     public void insert (KuduTable table, RowSerializable row, String [] fieldsNames) throws KuduException, NullPointerException {
 
         Insert insert;
-        try{
-            insert = table.newInsert();
-        } catch (NullPointerException e){
-            throw new NullPointerException("Error encountered at opening/creating table");
+        if(table==null){
+            return;
         }
+        insert = table.newInsert();
+
 
         for (int index = 0; index < row.productArity(); index++){
             //Create the insert with the previous data in function of the type ,a different "add"

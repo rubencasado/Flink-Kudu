@@ -1,5 +1,15 @@
-# Flink-Kudu
-Java library to integrate Apache Kudu and Apache Flink. Main goal is to be able to read/write data from/to Kudu using the DataSet and DataStream Flink's APIs.
+# Flink Kudu Connector
+This connector provides a source and sink to [Apache Kudu](http://kudu.apache.org/)™
+To use this connector, add the following dependency to your project:
+
+```
+<dependency>
+  <groupId>es.accenture</groupId>
+  <artifactId>flink-kudu-connector</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
 
 Data flows patterns:
 * Batch
@@ -52,27 +62,6 @@ env.execute();
 
 
 
-## Build library
-
-```shell
-git clone https://github.com/rubencasado/Flink-Kudu.git
-cd Flink-Kudu
-mvn clean install -DskipTests 
-mvn package -DskipTests
-```
-Generated JAR will be located at "*Flink-Kudu / target / flink-kudu-1.0-SNAPSHOT.jar*"
-
-## Maven dependency
-
-You can also add this connector as a maven dependency
-```
-<dependency>
-  <groupId>es.accenture</groupId>
-  <artifactId>flink-kudu-connector</artifactId>
-  <version>1.0</version>
-</dependency>
-```
-
 ## Execution
 
 Start Flink Job Manager
@@ -83,20 +72,5 @@ Submit the job
 ```
 <Flink-instalation-folder>/bin/flink run -c <Job-package-path> target/flink-kudu-1.0-SNAPSHOT.jar param1 param2 ...
 ```
-Example:
-```shell
-/opt/flink-1.1.3/bin/flink run -c es.accenture.flink.Job.JobBatchSink target/flink-kudu-1.0-SNAPSHOT.jar mytable CREATE localhost
-```
 
-**Included examples**
-
-- [x] JobBatchSink (**es.accenture.flink.Job.JobBatchSink**): Saves data from a DataSet into a Kudu table(*DataSet API, Batch Mode*). Input parameters: *table_name*, *table_mode* (CREATE, APPEND or OVERRIDE) and *host*.
-
-- [x] JobSource (**es.accenture.flink.Job.JobSource**): Reads data from a Kudu table and prints the information (*DataSet API, Batch Mode*).
-
-- [x] JobBatchInputOutput (**es.accenture.flink.Job.JobBatchInputOutput**): Reads data from a Kudu table, executes some basic operations using DataSet API and save the result into a Kudu table(*DataSet API, Batch Mode*).
-
-- [x] JobStreamingInputOutput (**es.accenture.flink.Job.JobStreamingInputOutput**): Reads data from Kafka, executes some basic operations using DataStream API and saves results into a Kudu table (*DataStream API, Streaming Mode*).
-
-- [x] JobStreamingSink (**es.accenture.flink.Job.JobStreamingSink**): Saves data from a DataStream into a Kudu table (*DataStream API, Streaming Mode*). Input parameters: *table_name* and *host*.
 

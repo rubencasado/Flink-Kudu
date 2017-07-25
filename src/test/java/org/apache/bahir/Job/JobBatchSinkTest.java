@@ -1,11 +1,28 @@
-package es.accenture.flink.Job;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import es.accenture.flink.Sink.KuduOutputFormat;
-import es.accenture.flink.Sources.KuduInputFormat;
-import es.accenture.flink.Utils.Exceptions.KuduClientException;
-import es.accenture.flink.Utils.Exceptions.KuduTableException;
-import es.accenture.flink.Utils.RowSerializable;
-import es.accenture.flink.Utils.Utils;
+package org.apache.bahir.Job;
+
+import org.apache.bahir.Sink.KuduOutputFormat;
+import org.apache.bahir.Sources.KuduInputFormat;
+import org.apache.bahir.Utils.Exceptions.KuduClientException;
+import org.apache.bahir.Utils.Exceptions.KuduTableException;
+import org.apache.bahir.Utils.RowSerializable;
+import org.apache.bahir.Utils.Utils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
